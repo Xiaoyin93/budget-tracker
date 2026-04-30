@@ -513,65 +513,17 @@ function renderMonthTabs(agg, onChange) {
 // 入口
 // ============================================
 
-async function decryptRecords(encObj) {
-  // 已有解密缓存（同一会话内不再问密码）
-  const cached = sessionStorage.getItem('records_decrypted_v1');
-  if (cached) {
-    try { return JSON.parse(cached); } catch (e) { /* fall through */ }
-  }
-
-  const blob = Uint8Array.from(atob(encObj.data), c => c.charCodeAt(0));
-  const salt = blob.slice(0, 16);
-  const iv   = blob.slice(16, 28);
-  const ct   = blob.slice(28);
-  const iters = parseInt((encObj.kdf || '').split('-').pop(), 10) || 200000;
-  const enc = new TextEncoder();
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const pwd = prompt(attempt === 0 ? '请输入访问密码（用于解密历史记录）' : '密码错误，再试一次');
-    if (pwd === null) throw new Error('已取消');
-    try {
-      const passKey = await crypto.subtle.importKey(
-        'raw', enc.encode(pwd), 'PBKDF2', false, ['deriveKey']
-      );
-      const key = await crypto.subtle.deriveKey(
-        { name: 'PBKDF2', salt, iterations: iters, hash: 'SHA-256' },
-        passKey,
-        { name: 'AES-GCM', length: 256 },
-        false,
-        ['decrypt']
-      );
-      const plaintext = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv }, key, ct
-      );
-      const text = new TextDecoder().decode(plaintext);
-      const data = JSON.parse(text);
-      sessionStorage.setItem('records_decrypted_v1', text);
-      return data;
-    } catch (e) {
-      // 密码错误（解密失败）— 重试
-    }
-  }
-  throw new Error('密码错误次数过多');
-}
-
 async function loadRecords() {
-  // 单文件版（dist）注入的明文
+  // 密码门统一处理（index.html 头部脚本已设置）
+  if (window.__unlock) {
+    const data = await window.__unlock;
+    if (data) return data;
+  }
+  // 兜底（无密码门情况）
   if (window.__RECORDS__) return window.__RECORDS__;
-  // 单文件版注入的密文
-  if (window.__RECORDS_ENC__) return await decryptRecords(window.__RECORDS_ENC__);
-
-  // 开发版：优先尝试明文
-  try {
-    const r = await fetch('data/records.json');
-    if (r.ok) return await r.json();
-  } catch (e) { /* fall through */ }
-
-  // 加密版（GitHub Pages 公开仓库用）
-  const r = await fetch('data/records.enc.json');
-  if (!r.ok) throw new Error('找不到 records 数据文件');
-  const encObj = await r.json();
-  return await decryptRecords(encObj);
+  const r = await fetch('data/records.json');
+  if (r.ok) return await r.json();
+  throw new Error('找不到 records 数据');
 }
 
 async function init() {

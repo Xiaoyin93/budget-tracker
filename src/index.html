@@ -5,8 +5,104 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>吧唧特 · 月度预算 + 历史看板</title>
 <link rel="stylesheet" href="styles.css" />
+<script>
+// 密码门：每次浏览器打开输一次密码，同 session 不再问。
+// 只有 records.enc.json 存在时才启用密码门；本地 records.json 在 → 直接放行。
+(function () {
+  document.documentElement.classList.add('locked');
+  let resolveUnlock;
+  window.__unlock = new Promise(r => { resolveUnlock = r; });
+
+  async function decryptHelper(encObj, pwd) {
+    const blob = Uint8Array.from(atob(encObj.data), c => c.charCodeAt(0));
+    const salt = blob.slice(0, 16);
+    const iv   = blob.slice(16, 28);
+    const ct   = blob.slice(28);
+    const iters = parseInt((encObj.kdf || '').split('-').pop(), 10) || 200000;
+    const enc = new TextEncoder();
+    const passKey = await crypto.subtle.importKey('raw', enc.encode(pwd), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: iters, hash: 'SHA-256' },
+      passKey,
+      { name: 'AES-GCM', length: 256 },
+      false, ['decrypt']
+    );
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  function done(data) {
+    if (data) window.__RECORDS__ = data;
+    document.documentElement.classList.remove('locked');
+    resolveUnlock(data || null);
+  }
+
+  (async function () {
+    // 单文件 dist 注入的明文
+    if (window.__RECORDS__) return done(window.__RECORDS__);
+
+    // 本地明文（开发用）
+    try {
+      const r = await fetch('data/records.json', { cache: 'no-store' });
+      if (r.ok && r.headers.get('content-type')?.includes('json')) return done(await r.json());
+    } catch (e) {}
+
+    // 加密版（dist 注入或 fetch）
+    let encObj = window.__RECORDS_ENC__;
+    if (!encObj) {
+      try {
+        const r = await fetch('data/records.enc.json', { cache: 'no-store' });
+        if (r.ok) encObj = await r.json();
+      } catch (e) {}
+    }
+    if (!encObj) return done(null); // 无数据，无门
+
+    // 同 session 已解过密
+    const cached = sessionStorage.getItem('__records_cache_v1');
+    if (cached) {
+      try { return done(JSON.parse(cached)); } catch (e) {}
+    }
+
+    if (document.readyState === 'loading') {
+      await new Promise(r => document.addEventListener('DOMContentLoaded', r));
+    }
+
+    const form  = document.getElementById('lockForm');
+    const input = document.getElementById('lockPwd');
+    const errEl = document.getElementById('lockError');
+    input.focus();
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.textContent = '';
+      try {
+        const data = await decryptHelper(encObj, input.value);
+        sessionStorage.setItem('__records_cache_v1', JSON.stringify(data));
+        done(data);
+      } catch (err) {
+        errEl.textContent = '密码错误';
+        input.value = '';
+        input.focus();
+      }
+    });
+  })();
+})();
+</script>
 </head>
 <body>
+
+<!-- 密码门：每次打开浏览器要输一次密码（同会话只问一次） -->
+<div class="lock-overlay" id="lockOverlay">
+  <form class="lock-card" id="lockForm" autocomplete="off">
+    <div class="lock-logo" aria-hidden="true">
+      <img src="assets/logo.png" alt="" width="40" height="40" />
+    </div>
+    <h2>吧唧特</h2>
+    <p>请输入访问密码</p>
+    <input type="password" id="lockPwd" placeholder="密码" autofocus />
+    <button type="submit" id="lockSubmit">解锁</button>
+    <div class="lock-error" id="lockError"></div>
+  </form>
+</div>
 
 <div class="app">
   <header class="app-header">
