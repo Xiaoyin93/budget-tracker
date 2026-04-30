@@ -1,0 +1,15 @@
+# 明文交易记录（含个人金融数据）— 不上传公开仓库
+src/data/records.json
+
+# Claude Code 本地权限设置（用户特有）
+.claude/settings.local.json
+
+# macOS / 编辑器
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# 临时构建产物（dist 单文件保留以便用户直接下载）
+*.log
+node_modules/

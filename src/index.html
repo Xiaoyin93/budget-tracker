@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>吧唧特 · 月度预算 + 历史看板</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app">
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-logo" aria-hidden="true">
+        <img src="assets/logo.png" alt="吧唧特" />
+      </span>
+      <div class="brand-text">
+        <h1 class="app-title">吧唧特</h1>
+        <input class="book-name" id="bookName" type="text" maxlength="30" placeholder="点击命名你的账本" autocomplete="off" />
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="budget" type="button" role="tab">每月记录</button>
+    <button class="tab-btn" data-tab="dashboard" type="button" role="tab">历史看板</button>
+  </nav>
+
+  <!-- ============================================
+       视图：月度预算
+       ============================================ -->
+  <section class="view active" id="view-budget" role="tabpanel">
+    <div class="pacman-card">
+      <div class="pacman-head">
+        <span class="pacman-title">本月储蓄进度</span>
+        <span class="pacman-status" id="pacmanStatus">待填写</span>
+      </div>
+      <svg class="pacman-svg" id="pacmanSvg" viewBox="0 0 800 56"></svg>
+      <div class="pacman-foot" id="pacmanFoot">吃完小豆豆抵达爱心 — 但别吃过头</div>
+    </div>
+
+    <div class="nav">
+      <button id="prevMonth" type="button" title="上月" aria-label="上月">←</button>
+      <select id="monthPicker"></select>
+      <button id="nextMonth" type="button" title="下月" aria-label="下月">→</button>
+      <span class="save-status" id="saveStatus">未保存</span>
+      <button class="icon-btn primary" id="saveBtn" type="button" title="保存本月" aria-label="保存本月">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 19V13H17V19H19V7.82843L16.1716 5H5V19H7ZM4 3H17L21 7V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V4C3 3.44772 3.44772 3 4 3ZM9 15V19H15V15H9Z"></path></svg>
+      </button>
+      <button class="icon-btn" id="clearBtn" type="button" title="清空输入" aria-label="清空输入">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 4V6H15V4H9Z"></path></svg>
+      </button>
+      <button class="icon-btn" id="privacyBtn" type="button" title="显示/隐藏所有金额" aria-label="切换金额显示">
+        <svg class="eye-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C17.3919 3 21.8714 6.88 22.8198 12C21.8714 17.12 17.3919 21 12 21C6.60808 21 2.12863 17.12 1.18018 12C2.12863 6.88 6.60808 3 12 3ZM12 19C16.2659 19 19.9351 16.0379 20.7787 12C19.9351 7.96212 16.2659 5 12 5C7.73414 5 4.06492 7.96212 3.22128 12C4.06492 16.0379 7.73414 19 12 19ZM12 16.5C9.51472 16.5 7.5 14.4853 7.5 12C7.5 9.51472 9.51472 7.5 12 7.5C14.4853 7.5 16.5 9.51472 16.5 12C16.5 14.4853 14.4853 16.5 12 16.5ZM12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z"></path></svg>
+        <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.8827 19.2968C16.1814 20.3755 14.1638 21.0008 12.0003 21.0008C6.60812 21.0008 2.12817 17.1201 1.18014 12.0008C1.61633 9.64984 2.81816 7.5621 4.52854 6.0186L1.39361 2.88451L2.80782 1.47032L22.6068 21.2693L21.1925 22.6835L17.8827 19.2968ZM5.94997 7.43971C4.60409 8.6157 3.62629 10.1883 3.22115 12.0008C4.14624 16.1356 7.7711 19.0008 12.0003 19.0008C13.5859 19.0008 15.0892 18.6027 16.4055 17.892L14.7833 16.2698C13.9039 16.7474 12.8939 17.0008 11.8358 17.0008C8.76239 17.0008 6.27272 14.5111 6.27272 11.4377C6.27272 10.3796 6.52612 9.36963 7.00373 8.49019L5.94997 7.43971ZM9.45669 11.6094C9.42572 11.4117 9.4097 11.2078 9.4097 11.0008C9.4097 9.36347 10.7339 8.0392 12.3713 8.0392C12.5783 8.0392 12.7822 8.05522 12.9799 8.08619L9.45669 11.6094ZM21.892 12.4992C21.0026 16.7233 17.4218 19.6502 13.2503 19.9856C13.5118 19.9956 13.7745 20.0008 14.0381 20.0008C18.2671 20.0008 21.892 17.1359 22.8171 13.0008L21.892 12.4992Z"></path></svg>
+      </button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="summary">
+      <div class="metric">
+        <p class="metric-label">收入总额</p>
+        <p class="metric-value editable" id="sumBudget" contenteditable="true" spellcheck="false" inputmode="numeric" title="点击修改本月收入">¥0</p>
+        <p class="metric-sub" id="sumBudgetSub">RMB 等值</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">本月实际</p>
+        <p class="metric-value" id="sumActual">¥0</p>
+        <p class="metric-sub" id="sumActualSub">待填写</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">储蓄率</p>
+        <p class="metric-value" id="sumRate">—</p>
+        <p class="metric-sub">目标 &gt; 35%</p>
+      </div>
+    </div>
+
+    <div id="sectionsWrap"></div>
+
+    <div class="notes-card">
+      <p class="notes-label">本月备注</p>
+      <textarea class="notes-textarea" id="monthNotes" placeholder="记一下特殊开销、原因、下月要注意的事..."></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="secondary" id="fillBudgetBtn" type="button">一键填入预算值</button>
+    </div>
+
+    <div class="history">
+      <div class="history-title">
+        <span>历史记录</span>
+        <div class="history-title-actions">
+          <button type="button" id="exportBtn">导出备份</button>
+          <button type="button" id="importBtn">导入备份</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" />
+        </div>
+      </div>
+      <div id="histList"></div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       视图：历史看板
+       ============================================ -->
+  <section class="view" id="view-dashboard" role="tabpanel">
+    <div class="dash-range" id="dateRange"></div>
+
+    <div class="month-tabs" id="dashMonthTabs"></div>
+
+    <div class="summary-4">
+      <div class="metric">
+        <p class="metric-label" id="mLabel0">总支出</p>
+        <p class="metric-value" id="mTotalExp">¥0</p>
+        <p class="metric-sub" id="mMonths">— 个月</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label" id="mLabel1">月均支出</p>
+        <p class="metric-value" id="mAvgExp">¥0</p>
+        <p class="metric-sub" id="mAvgExpSub">—</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label" id="mLabel2">月均收入</p>
+        <p class="metric-value" id="mAvgInc">¥0</p>
+        <p class="metric-sub" id="mAvgIncSub">含意外收入</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label" id="mLabel3">月均盈余</p>
+        <p class="metric-value" id="mAvgNet">¥0</p>
+        <p class="metric-sub" id="mAvgNetSub">储蓄率 —</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 12h3v9H3v-9zm15-4h3v13h-3V8zm-7.5-6h3v19h-3V2z"/></svg>每月收支对比</p>
+      <p class="card-sub">12 个月的支出与收入趋势</p>
+      <div class="bars-wrap"><svg class="bars-svg" id="barsSvg"></svg></div>
+      <div class="legend">
+        <span><span class="dot dot-expense"></span>支出</span>
+        <span><span class="dot dot-income"></span>收入</span>
+        <span class="muted" id="barsHint"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 22A10 10 0 0 1 11 2v10h10a10 10 0 0 1-10 10zm2-19.95A10 10 0 0 1 21.95 11H13V2.05z"/></svg>类别分布</p>
+      <p class="card-sub">12 个月累计，按金额排序</p>
+      <div class="cat-list" id="catList"></div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>月份 × 类别</p>
+      <p class="card-sub">颜色越深表示该月该类别花费越高（仅展示 Top 类别）</p>
+      <div class="heat-wrap"><table class="heat-table" id="heatTable"></table></div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3v16h16v2H3V3h2zm15.46 3.46l1.42 1.42-5 5-4-4-5.46 5.46L6 13l6.88-6.88L17 10l3.46-3.54z"/></svg>开销画像</p>
+      <p class="card-sub">每个类别的月均花费与逐月波动</p>
+      <div class="profile-grid" id="profileGrid"></div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 4h13v2H8V4zm0 7h13v2H8v-2zm0 7h13v2H8v-2zM3 3.5h3v3H3v-3zm0 7h3v3H3v-3zm0 7h3v3H3v-3z"/></svg>大额记录</p>
+      <p class="card-sub">单笔金额最高的 20 条</p>
+      <div class="dash-filter">
+        <select id="bigCatFilter"><option value="">所有类别</option></select>
+      </div>
+      <div class="big-list" id="bigList"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Tab 切换
+(function () {
+  const tabs = document.querySelectorAll('.tab-btn');
+  const views = document.querySelectorAll('.view');
+  function switchTo(name) {
+    tabs.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    views.forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+    history.replaceState(null, '', '#' + name);
+    if (name === 'dashboard' && window.__redrawDashboard) window.__redrawDashboard();
+  }
+  tabs.forEach(b => b.addEventListener('click', () => switchTo(b.dataset.tab)));
+  const initial = (location.hash || '').slice(1);
+  if (initial === 'dashboard') switchTo('dashboard');
+})();
+</script>
+<script>document.write('<script type="module" src="app.js?t=' + Date.now() + '"><\/script>');</script>
+<script>document.write('<script src="dashboard.js?t=' + Date.now() + '"><\/script>');</script>
+
+</body>
+</html>

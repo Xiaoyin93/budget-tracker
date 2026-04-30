@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>加密 records.json</title>
+<style>
+body {
+  font-family: -apple-system, "PingFang SC", sans-serif;
+  max-width: 540px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #FAF7F2;
+  color: #0F0E0B;
+}
+h1 { font-size: 20px; margin: 0 0 8px; }
+p { font-size: 13px; color: #6E6A5E; line-height: 1.6; }
+.row { margin: 14px 0; }
+label { display: block; font-size: 12px; color: #3A3832; margin-bottom: 4px; }
+input[type=file], input[type=password] {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #0F0E0B;
+  border-radius: 6px;
+  font-family: inherit;
+  background: #FFF;
+}
+button {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  background: #0F0E0B;
+  color: #FAF7F2;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 8px;
+}
+button:hover { background: #2A2A28; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.out { margin-top: 18px; padding: 12px; background: #FFF; border: 1px solid rgba(15,14,11,0.18); border-radius: 6px; font-size: 12px; }
+.out a { display: inline-block; margin-top: 8px; padding: 6px 12px; background: #2D6B14; color: #FFF; text-decoration: none; border-radius: 4px; font-size: 12px; }
+.err { color: #B92516; }
+.ok { color: #2D6B14; }
+code { background: #F1EDE5; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>加密 records.json</h1>
+<p>用密码把 <code>src/data/records.json</code> 加密成 <code>records.enc.json</code>，加密后的文件可以放进公开仓库 — 没密码读不出内容。</p>
+
+<div class="row">
+  <label>1. 选择 records.json</label>
+  <input type="file" id="file" accept=".json" />
+</div>
+
+<div class="row">
+  <label>2. 设置访问密码（之后浏览页面要输入这个密码）</label>
+  <input type="password" id="pwd" placeholder="建议 12 位以上 + 字母数字混合" />
+</div>
+
+<div class="row">
+  <label>3. 再输一次确认</label>
+  <input type="password" id="pwd2" placeholder="确认密码" />
+</div>
+
+<button id="go">加密并下载</button>
+
+<div class="out" id="out" style="display:none"></div>
+
+<script>
+const PBKDF2_ITERS = 200000;
+
+async function encrypt(plain, password) {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+
+  const passwordKey = await crypto.subtle.importKey(
+    'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERS, hash: 'SHA-256' },
+    passwordKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+  );
+
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    enc.encode(plain)
+  );
+
+  // Pack: salt(16) || iv(12) || ciphertext
+  const blob = new Uint8Array(16 + 12 + ciphertext.byteLength);
+  blob.set(salt, 0);
+  blob.set(iv, 16);
+  blob.set(new Uint8Array(ciphertext), 28);
+
+  // base64
+  let bin = '';
+  for (let i = 0; i < blob.length; i++) bin += String.fromCharCode(blob[i]);
+  return btoa(bin);
+}
+
+document.getElementById('go').addEventListener('click', async () => {
+  const out = document.getElementById('out');
+  out.style.display = 'block';
+  out.className = 'out';
+  out.textContent = '';
+
+  const file = document.getElementById('file').files[0];
+  const pwd = document.getElementById('pwd').value;
+  const pwd2 = document.getElementById('pwd2').value;
+
+  if (!file) { out.textContent = '请先选择 records.json'; out.className = 'out err'; return; }
+  if (!pwd || pwd.length < 6) { out.textContent = '密码至少 6 位'; out.className = 'out err'; return; }
+  if (pwd !== pwd2) { out.textContent = '两次密码不一致'; out.className = 'out err'; return; }
+
+  out.textContent = '加密中...';
+  try {
+    const text = await file.text();
+    JSON.parse(text); // 验证是合法 JSON
+    const b64 = await encrypt(text, pwd);
+    const obj = {
+      v: 1,
+      alg: 'AES-GCM',
+      kdf: 'PBKDF2-SHA256-' + PBKDF2_ITERS,
+      data: b64,
+    };
+    const json = JSON.stringify(obj);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    out.className = 'out ok';
+    out.innerHTML = `加密完成（${json.length} 字节）。把下载的文件存到 <code>src/data/records.enc.json</code>，并把原来的 <code>records.json</code> 删掉或忽略不提交（已加进 .gitignore）。<br><a id="dl" href="${url}" download="records.enc.json">下载 records.enc.json</a>`;
+  } catch (e) {
+    out.className = 'out err';
+    out.textContent = '出错：' + e.message;
+  }
+});
+</script>
+
+</body>
+</html>
