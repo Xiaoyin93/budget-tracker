@@ -70,7 +70,14 @@
     const form  = document.getElementById('lockForm');
     const input = document.getElementById('lockPwd');
     const errEl = document.getElementById('lockError');
+    const eye   = document.getElementById('lockEye');
     input.focus();
+    eye.addEventListener('click', () => {
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      eye.classList.toggle('shown', !showing);
+      input.focus();
+    });
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       errEl.textContent = '';
@@ -98,7 +105,13 @@
     </div>
     <h2>吧唧特</h2>
     <p>请输入访问密码</p>
-    <input type="password" id="lockPwd" placeholder="密码" autofocus />
+    <div class="lock-input-wrap">
+      <input type="password" id="lockPwd" placeholder="密码" autofocus />
+      <button type="button" class="lock-eye" id="lockEye" aria-label="显示密码" tabindex="-1">
+        <svg class="eye-on" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C17.3919 3 21.8714 6.88 22.8198 12C21.8714 17.12 17.3919 21 12 21C6.60808 21 2.12863 17.12 1.18018 12C2.12863 6.88 6.60808 3 12 3ZM12 19C16.2659 19 19.9351 16.0379 20.7787 12C19.9351 7.96212 16.2659 5 12 5C7.73414 5 4.06492 7.96212 3.22128 12C4.06492 16.0379 7.73414 19 12 19ZM12 16.5C9.51472 16.5 7.5 14.4853 7.5 12C7.5 9.51472 9.51472 7.5 12 7.5C14.4853 7.5 16.5 9.51472 16.5 12C16.5 14.4853 14.4853 16.5 12 16.5ZM12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z"/></svg>
+        <svg class="eye-off" viewBox="0 0 24 24" fill="currentColor"><path d="M17.8827 19.2968C16.1814 20.3755 14.1638 21.0008 12.0003 21.0008C6.60812 21.0008 2.12817 17.1201 1.18014 12.0008C1.61633 9.64984 2.81816 7.5621 4.52854 6.0186L1.39361 2.88451L2.80782 1.47032L22.6068 21.2693L21.1925 22.6835L17.8827 19.2968ZM5.94997 7.43971C4.60409 8.6157 3.62629 10.1883 3.22115 12.0008C4.14624 16.1356 7.7711 19.0008 12.0003 19.0008C13.5859 19.0008 15.0892 18.6027 16.4055 17.892L14.7833 16.2698C13.9039 16.7474 12.8939 17.0008 11.8358 17.0008C8.76239 17.0008 6.27272 14.5111 6.27272 11.4377C6.27272 10.3796 6.52612 9.36963 7.00373 8.49019L5.94997 7.43971ZM9.45669 11.6094C9.42572 11.4117 9.4097 11.2078 9.4097 11.0008C9.4097 9.36347 10.7339 8.0392 12.3713 8.0392C12.5783 8.0392 12.7822 8.05522 12.9799 8.08619L9.45669 11.6094ZM21.892 12.4992C21.0026 16.7233 17.4218 19.6502 13.2503 19.9856C13.5118 19.9956 13.7745 20.0008 14.0381 20.0008C18.2671 20.0008 21.892 17.1359 22.8171 13.0008L21.892 12.4992Z"/></svg>
+      </button>
+    </div>
     <button type="submit" id="lockSubmit">解锁</button>
     <div class="lock-error" id="lockError"></div>
   </form>

@@ -112,18 +112,43 @@ html.locked .lock-overlay { display: flex; }
   font-size: 12px;
 }
 
+.lock-card .lock-input-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
 .lock-card input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 38px 10px 12px;
   font-size: 14px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   font-family: inherit;
   background: var(--bg);
-  margin-bottom: 12px;
   color: var(--text-primary);
 }
 .lock-card input:focus { outline: none; border-color: var(--text-primary); }
+
+.lock-card .lock-eye {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--text-tertiary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  border-radius: 4px;
+}
+.lock-card .lock-eye:hover { color: var(--text-primary); background: transparent; }
+.lock-card .lock-eye svg { width: 16px; height: 16px; display: block; }
+.lock-card .lock-eye .eye-off { display: none; }
+.lock-card .lock-eye.shown .eye-on { display: none; }
+.lock-card .lock-eye.shown .eye-off { display: block; }
 
 .lock-card button {
   width: 100%;
