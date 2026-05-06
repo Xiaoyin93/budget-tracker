@@ -364,9 +364,13 @@ body {
 .icon-btn svg { display: block; width: 16px; height: 16px; flex: none; }
 
 /* 隐私模式：用 *** 隐藏金额（眼睛图标切换 on/off） */
-#privacyBtn .eye-off { display: none; }
-body.privacy-mode #privacyBtn .eye-on { display: none; }
-body.privacy-mode #privacyBtn .eye-off { display: block; }
+#privacyBtn .eye-off,
+#dashPrivacyBtn .eye-off { display: none; }
+body.privacy-mode #privacyBtn .eye-on,
+body.privacy-mode #dashPrivacyBtn .eye-on { display: none; }
+body.privacy-mode #privacyBtn .eye-off,
+body.privacy-mode #dashPrivacyBtn .eye-off { display: block; }
+.month-tabs .dash-privacy-btn { margin-left: auto; align-self: center; flex: none; }
 
 /* 显示类元素：原文字透明 + ::after 叠加 *** */
 body.privacy-mode .metric-value,
@@ -409,6 +413,9 @@ body.privacy-mode .big-amt::after {
   user-select: none;
   font-weight: inherit;
 }
+/* 收入总额可编辑时有 -4px margin + 4px padding，*** 需要左移补齐 */
+body.privacy-mode .metric-value.editable::after { left: 4px; }
+
 /* 右对齐元素的 *** 也右对齐 */
 body.privacy-mode .item-budget::after,
 body.privacy-mode .section-footer span:last-child::after,

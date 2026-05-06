@@ -67,6 +67,118 @@
    ============================================ */
 * { box-sizing: border-box; }
 
+/* ============================================
+   密码门（lock overlay）
+   ============================================ */
+html.locked .app { display: none; }
+.lock-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+html.locked .lock-overlay { display: flex; }
+
+.lock-card {
+  background: var(--bg-card);
+  border: 1px solid var(--text-primary);
+  border-radius: 14px;
+  padding: 28px 28px 24px;
+  width: 320px;
+  max-width: calc(100% - 40px);
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+               "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+.lock-card .lock-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.lock-card .lock-logo img {
+  display: block;
+  background: #FFF;
+  border: 1px solid var(--text-primary);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.lock-card h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.lock-card p {
+  margin: 0 0 18px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.lock-card .lock-input-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+.lock-card input {
+  width: 100%;
+  padding: 10px 38px 10px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+.lock-card input:focus { outline: none; border-color: var(--text-primary); }
+
+.lock-card .lock-eye {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--text-tertiary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  border-radius: 4px;
+}
+.lock-card .lock-eye:hover { color: var(--text-primary); background: transparent; }
+.lock-card .lock-eye svg { width: 16px; height: 16px; display: block; }
+.lock-card .lock-eye .eye-off { display: none; }
+.lock-card .lock-eye.shown .eye-on { display: none; }
+.lock-card .lock-eye.shown .eye-off { display: block; }
+
+.lock-card button {
+  width: 100%;
+  padding: 10px;
+  background: var(--text-primary);
+  color: var(--bg-card);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: inherit;
+}
+.lock-card button:hover { background: #2A2A28; }
+.lock-card button:active { transform: scale(0.98); }
+
+.lock-error {
+  color: var(--danger);
+  font-size: 12px;
+  min-height: 16px;
+  margin-top: 6px;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -208,15 +320,20 @@ body {
 .nav select {
   height: 34px;
   min-width: 140px;
-  padding: 0 10px;
+  padding: 0 30px 0 12px;
   font-size: 14px;
   font-weight: 500;
-  background: var(--bg-card);
+  background-color: var(--bg-card);
   color: var(--text-primary);
   border: 0.5px solid var(--border);
   border-radius: var(--radius-md);
   font-family: inherit;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%230F0E0B' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
 }
 
 .save-status {
@@ -252,6 +369,76 @@ body {
 }
 .icon-btn.primary:hover { background: #2A2A28; }
 .icon-btn svg { display: block; width: 16px; height: 16px; flex: none; }
+
+/* 隐私模式：用 *** 隐藏金额（眼睛图标切换 on/off） */
+#privacyBtn .eye-off,
+#dashPrivacyBtn .eye-off { display: none; }
+body.privacy-mode #privacyBtn .eye-on,
+body.privacy-mode #dashPrivacyBtn .eye-on { display: none; }
+body.privacy-mode #privacyBtn .eye-off,
+body.privacy-mode #dashPrivacyBtn .eye-off { display: block; }
+.month-tabs .dash-privacy-btn { margin-left: auto; align-self: center; flex: none; }
+
+/* 显示类元素：原文字透明 + ::after 叠加 *** */
+body.privacy-mode .metric-value,
+body.privacy-mode .item-budget,
+body.privacy-mode .pacman-status,
+body.privacy-mode .section-footer span:last-child,
+body.privacy-mode .history-row span:nth-child(2),
+body.privacy-mode .history-row span:nth-child(4),
+body.privacy-mode .summary-4 .metric-value,
+body.privacy-mode .summary-4 .metric-sub,
+body.privacy-mode #catList .cat-amt,
+body.privacy-mode #catList .cat-pct,
+body.privacy-mode .heat-table td:not(:first-child),
+body.privacy-mode .profile-avg,
+body.privacy-mode .big-amt {
+  color: transparent !important;
+  position: relative;
+  user-select: none;
+}
+body.privacy-mode .metric-value::after,
+body.privacy-mode .item-budget::after,
+body.privacy-mode .pacman-status::after,
+body.privacy-mode .section-footer span:last-child::after,
+body.privacy-mode .history-row span:nth-child(2)::after,
+body.privacy-mode .history-row span:nth-child(4)::after,
+body.privacy-mode .summary-4 .metric-value::after,
+body.privacy-mode .summary-4 .metric-sub::after,
+body.privacy-mode #catList .cat-amt::after,
+body.privacy-mode #catList .cat-pct::after,
+body.privacy-mode .heat-table td:not(:first-child)::after,
+body.privacy-mode .profile-avg::after,
+body.privacy-mode .big-amt::after {
+  content: '***';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  color: var(--text-primary);
+  pointer-events: none;
+  user-select: none;
+  font-weight: inherit;
+}
+/* 收入总额可编辑时有 -4px margin + 4px padding，*** 需要左移补齐 */
+body.privacy-mode .metric-value.editable::after { left: 4px; }
+
+/* 右对齐元素的 *** 也右对齐 */
+body.privacy-mode .item-budget::after,
+body.privacy-mode .section-footer span:last-child::after,
+body.privacy-mode .history-row span:nth-child(2)::after,
+body.privacy-mode .history-row span:nth-child(4)::after,
+body.privacy-mode #catList .cat-amt::after,
+body.privacy-mode #catList .cat-pct::after,
+body.privacy-mode .heat-table td:not(:first-child)::after,
+body.privacy-mode .profile-avg::after,
+body.privacy-mode .big-amt::after,
+body.privacy-mode .pacman-status::after {
+  justify-content: flex-end;
+}
+
+/* 输入框 placeholder 也藏掉（type 已经被 JS 切成 password 显示 dots） */
+body.privacy-mode .item-input::placeholder { color: transparent; }
 
 /* ============================================
    提示条
@@ -309,6 +496,22 @@ body {
   margin: 0;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+}
+
+/* 可点击编辑（收入总额） */
+.metric-value.editable {
+  cursor: text;
+  border-radius: 6px;
+  padding: 0 4px;
+  margin-left: -4px;
+  outline: 1px dashed transparent;
+  transition: outline-color 0.15s, background 0.15s;
+  display: inline-block;
+}
+.metric-value.editable:hover { outline-color: var(--border-strong); }
+.metric-value.editable:focus {
+  outline: 1px solid var(--text-primary);
+  background: var(--bg-card);
 }
 
 .metric-sub {
@@ -745,7 +948,7 @@ body {
   border-radius: 4px;
   overflow: hidden;
 }
-.cat-bar-fill { height: 100%; background: var(--text-primary); border-radius: 4px; }
+.cat-bar-fill { height: 100%; background: var(--text-primary); border-radius: 4px; opacity: 0.6; }
 .cat-bar-fill.f-1 { background: var(--text-primary); }
 .cat-bar-fill.f-2 { background: var(--text-secondary); }
 .cat-bar-fill.f-3 { background: var(--text-tertiary); }
@@ -755,9 +958,29 @@ body {
 .cat-row .cat-amt { text-align: right; color: var(--text-secondary); }
 .cat-row .cat-pct { text-align: right; color: var(--text-tertiary); font-size: 11px; }
 
-.heat-wrap { width: 100%; overflow-x: auto; }
+.heat-wrap {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s;
+}
+.heat-wrap:hover { scrollbar-color: var(--bg-tertiary) transparent; }
+.heat-wrap::-webkit-scrollbar {
+  height: 6px;
+  background: transparent;
+}
+.heat-wrap::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+.heat-wrap:hover::-webkit-scrollbar-thumb { background: var(--bg-tertiary); }
+.heat-wrap:hover::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
 .heat-table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   min-width: 720px;
@@ -774,27 +997,34 @@ body {
 }
 .heat-table th:first-child, .heat-table td:first-child {
   text-align: left;
+  position: sticky;
+  left: 0;
   background: var(--bg-card);
   font-weight: 500;
   color: var(--text-primary);
-  border-right: 0.5px solid var(--border);
+  border-right: 1px solid var(--border-strong);
   min-width: 80px;
+  z-index: 2;
 }
 .heat-cell { color: var(--text-primary); }
-.heat-cell-empty { color: var(--text-tertiary); }
-/* 奶黄/奶油色渐变（低饱和度） */
-.heat-cell.h-1 { background: #FAF1DC; }
-.heat-cell.h-2 { background: #F2E1B0; }
-.heat-cell.h-3 { background: #E8CC82; }
-.heat-cell.h-4 { background: #D8B459; }
-.heat-cell.h-5 { background: #BC9234; color: #FCFCFC; }
+.heat-cell-empty {
+  color: var(--text-tertiary);
+  background: #F4F3EF;
+}
+/* 单色珊瑚色由浅到深（60% 透明） */
+.heat-cell.h-1 { background: rgba(252, 226, 214, 0.6); }
+.heat-cell.h-2 { background: rgba(248, 191, 166, 0.6); }
+.heat-cell.h-3 { background: rgba(237, 140, 114, 0.6); }
+.heat-cell.h-4 { background: rgba(213,  87,  60, 0.6); }
+.heat-cell.h-5 { background: rgba(168,  52,  28, 0.6); }
 
 @media (prefers-color-scheme: dark) {
-  .heat-cell.h-1 { background: #3A3220; color: #F2EBD2; }
-  .heat-cell.h-2 { background: #524627; color: #F2EBD2; }
-  .heat-cell.h-3 { background: #6E5C2C; color: #F2EBD2; }
-  .heat-cell.h-4 { background: #927731; color: #FCFCFC; }
-  .heat-cell.h-5 { background: #B6953A; color: #FCFCFC; }
+  .heat-cell-empty { background: #2A2825; }
+  .heat-cell.h-1 { background: rgba(252, 226, 214, 0.18); color: #F2EBD2; }
+  .heat-cell.h-2 { background: rgba(248, 191, 166, 0.24); color: #F2EBD2; }
+  .heat-cell.h-3 { background: rgba(237, 140, 114, 0.32); color: #F2EBD2; }
+  .heat-cell.h-4 { background: rgba(213,  87,  60, 0.42); color: #F2EBD2; }
+  .heat-cell.h-5 { background: rgba(168,  52,  28, 0.55); color: #F2EBD2; }
 }
 
 /* 热力 tooltip */
@@ -899,7 +1129,8 @@ body {
 .month-tabs::-webkit-scrollbar { height: 4px; }
 .month-tabs::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 2px; }
 
-.month-tab {
+.month-tab,
+.month-tab-picker {
   flex: none;
   padding: 6px 12px;
   font-size: 13px;
@@ -911,13 +1142,57 @@ body {
   font-family: inherit;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  position: relative;
   transition: background 0.15s, color 0.15s;
 }
-.month-tab:hover { background: var(--bg-tertiary); }
-.month-tab.active {
+.month-tab:hover,
+.month-tab-picker:hover { background: var(--bg-tertiary); }
+.month-tab.active,
+.month-tab-picker.active {
   background: var(--text-primary);
   color: var(--bg-card);
 }
+
+/* 当月 picker：内嵌透明 select */
+.month-tab-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.month-tab-picker .picker-caret {
+  width: 12px;
+  height: 12px;
+  display: block;
+  opacity: 0.75;
+}
+.month-tab-picker select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* 全年总览的 hover tooltip */
+.month-tab .tab-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-primary);
+  color: var(--bg-card);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 5;
+}
+.month-tab:hover .tab-tooltip { opacity: 1; }
 
 /* ============================================
    彩色标签（参考 ChartMogul 风格）
@@ -983,8 +1258,10 @@ body {
   text-align: right;
 }
 
+.pacman-status .pacman-slash { color: var(--text-tertiary); margin: 0 2px; }
 .pacman-status .pacman-pct { color: var(--rose); font-weight: 600; margin-left: 6px; }
 .pacman-status .pacman-pct.over { color: var(--danger); }
+.pacman-status .pacman-pct.done { color: var(--success); }
 
 .pacman-svg {
   display: block;
@@ -997,6 +1274,29 @@ body {
 }
 .pacman-svg .pixel-pac rect { shape-rendering: crispEdges; }
 .pacman-svg .pixel-apple rect { shape-rendering: crispEdges; }
+
+/* hover 动效：吃豆人轻微放大 / 终点旗子摇晃 */
+.pacman-svg image { cursor: pointer; transform-box: fill-box; }
+.pacman-svg .pacman-face { cursor: pointer; }
+.pacman-svg .pacman-face image {
+  transform-origin: 50% 50%;
+  transition: transform 0.2s ease;
+}
+.pacman-svg .pacman-face:hover image {
+  transform: scale(1.18);
+}
+
+.pacman-svg image[href*="flag"] { transform-origin: 50% 100%; }
+.pacman-svg image[href*="flag"]:hover {
+  animation: flag-shake 0.55s ease;
+}
+@keyframes flag-shake {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(-12deg); }
+  35% { transform: rotate(9deg); }
+  55% { transform: rotate(-6deg); }
+  75% { transform: rotate(3deg); }
+}
 
 .pacman-foot {
   margin-top: 6px;
@@ -1026,8 +1326,117 @@ body {
 }
 
 </style>
+<script>
+// 密码门：每次浏览器打开输一次密码，同 session 不再问。
+// 只有 records.enc.json 存在时才启用密码门；本地 records.json 在 → 直接放行。
+(function () {
+  document.documentElement.classList.add('locked');
+  let resolveUnlock;
+  window.__unlock = new Promise(r => { resolveUnlock = r; });
+
+  async function decryptHelper(encObj, pwd) {
+    const blob = Uint8Array.from(atob(encObj.data), c => c.charCodeAt(0));
+    const salt = blob.slice(0, 16);
+    const iv   = blob.slice(16, 28);
+    const ct   = blob.slice(28);
+    const iters = parseInt((encObj.kdf || '').split('-').pop(), 10) || 200000;
+    const enc = new TextEncoder();
+    const passKey = await crypto.subtle.importKey('raw', enc.encode(pwd), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: iters, hash: 'SHA-256' },
+      passKey,
+      { name: 'AES-GCM', length: 256 },
+      false, ['decrypt']
+    );
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  function done(data) {
+    if (data) window.__RECORDS__ = data;
+    document.documentElement.classList.remove('locked');
+    resolveUnlock(data || null);
+  }
+
+  (async function () {
+    // 单文件 dist 注入的明文
+    if (window.__RECORDS__) return done(window.__RECORDS__);
+
+    // 本地明文（开发用）
+    try {
+      const r = await fetch('data/records.json', { cache: 'no-store' });
+      if (r.ok && r.headers.get('content-type')?.includes('json')) return done(await r.json());
+    } catch (e) {}
+
+    // 加密版（dist 注入或 fetch）
+    let encObj = window.__RECORDS_ENC__;
+    if (!encObj) {
+      try {
+        const r = await fetch('data/records.enc.json', { cache: 'no-store' });
+        if (r.ok) encObj = await r.json();
+      } catch (e) {}
+    }
+    if (!encObj) return done(null); // 无数据，无门
+
+    // 同 session 已解过密
+    const cached = sessionStorage.getItem('__records_cache_v1');
+    if (cached) {
+      try { return done(JSON.parse(cached)); } catch (e) {}
+    }
+
+    if (document.readyState === 'loading') {
+      await new Promise(r => document.addEventListener('DOMContentLoaded', r));
+    }
+
+    const form  = document.getElementById('lockForm');
+    const input = document.getElementById('lockPwd');
+    const errEl = document.getElementById('lockError');
+    const eye   = document.getElementById('lockEye');
+    input.focus();
+    eye.addEventListener('click', () => {
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      eye.classList.toggle('shown', !showing);
+      input.focus();
+    });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.textContent = '';
+      try {
+        const data = await decryptHelper(encObj, input.value);
+        sessionStorage.setItem('__records_cache_v1', JSON.stringify(data));
+        done(data);
+      } catch (err) {
+        errEl.textContent = '密码错误';
+        input.value = '';
+        input.focus();
+      }
+    });
+  })();
+})();
+</script>
 </head>
 <body>
+
+<!-- 密码门：每次打开浏览器要输一次密码（同会话只问一次） -->
+<div class="lock-overlay" id="lockOverlay">
+  <form class="lock-card" id="lockForm" autocomplete="off">
+    <div class="lock-logo" aria-hidden="true">
+      <img src="data:image/png;base64,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" alt="" width="40" height="40" />
+    </div>
+    <h2>吧唧特</h2>
+    <p>请输入访问密码</p>
+    <div class="lock-input-wrap">
+      <input type="password" id="lockPwd" placeholder="密码" autofocus />
+      <button type="button" class="lock-eye" id="lockEye" aria-label="显示密码" tabindex="-1">
+        <svg class="eye-on" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C17.3919 3 21.8714 6.88 22.8198 12C21.8714 17.12 17.3919 21 12 21C6.60808 21 2.12863 17.12 1.18018 12C2.12863 6.88 6.60808 3 12 3ZM12 19C16.2659 19 19.9351 16.0379 20.7787 12C19.9351 7.96212 16.2659 5 12 5C7.73414 5 4.06492 7.96212 3.22128 12C4.06492 16.0379 7.73414 19 12 19ZM12 16.5C9.51472 16.5 7.5 14.4853 7.5 12C7.5 9.51472 9.51472 7.5 12 7.5C14.4853 7.5 16.5 9.51472 16.5 12C16.5 14.4853 14.4853 16.5 12 16.5ZM12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z"/></svg>
+        <svg class="eye-off" viewBox="0 0 24 24" fill="currentColor"><path d="M17.8827 19.2968C16.1814 20.3755 14.1638 21.0002 12.0003 21.0002C6.60812 21.0002 2.12215 17.1204 1.18164 12.0002C1.61832 9.62282 2.81932 7.5129 4.52047 5.93457L1.39366 2.80777L2.80788 1.39355L22.6069 21.1925L21.1927 22.6068L17.8827 19.2968ZM5.9356 7.3497C4.60673 8.56015 3.6378 10.1672 3.22278 12.0002C4.14022 16.0521 7.7646 19.0002 12.0003 19.0002C13.5997 19.0002 15.112 18.5798 16.4243 17.8384L14.396 15.8101C13.7023 16.2472 12.8808 16.5002 12.0003 16.5002C9.51498 16.5002 7.50026 14.4854 7.50026 12.0002C7.50026 11.1196 7.75317 10.2981 8.19031 9.60442L5.9356 7.3497ZM12.9139 14.328L9.67246 11.0866C9.5613 11.3696 9.50026 11.6777 9.50026 12.0002C9.50026 13.3809 10.6196 14.5002 12.0003 14.5002C12.3227 14.5002 12.6309 14.4391 12.9139 14.328ZM20.8068 16.5925L19.376 15.1617C20.0319 14.2268 20.5154 13.1586 20.7777 12.0002C19.8603 7.94818 16.2359 5.00016 12.0003 5.00016C11.1544 5.00016 10.3329 5.11773 9.55249 5.33818L7.97446 3.76015C9.22127 3.26959 10.5793 3.00016 12.0003 3.00016C17.3924 3.00016 21.8784 6.87992 22.8189 12.0002C22.5067 13.6998 21.8038 15.2628 20.8068 16.5925ZM11.7229 7.50857C11.8146 7.50299 11.9071 7.50016 12.0003 7.50016C14.4855 7.50016 16.5003 9.51488 16.5003 12.0002C16.5003 12.0933 16.4974 12.1858 16.4919 12.2775L11.7229 7.50857Z"/></svg>
+      </button>
+    </div>
+    <button type="submit" id="lockSubmit">解锁</button>
+    <div class="lock-error" id="lockError"></div>
+  </form>
+</div>
 
 <div class="app">
   <header class="app-header">
@@ -1053,10 +1462,10 @@ body {
   <section class="view active" id="view-budget" role="tabpanel">
     <div class="pacman-card">
       <div class="pacman-head">
-        <span class="pacman-title">本月目标进度</span>
+        <span class="pacman-title">本月储蓄进度</span>
         <span class="pacman-status" id="pacmanStatus">待填写</span>
       </div>
-      <svg class="pacman-svg" id="pacmanSvg" viewBox="0 0 800 56" preserveAspectRatio="none"></svg>
+      <svg class="pacman-svg" id="pacmanSvg" viewBox="0 0 800 56"></svg>
       <div class="pacman-foot" id="pacmanFoot">吃完小豆豆抵达爱心 — 但别吃过头</div>
     </div>
 
@@ -1071,6 +1480,10 @@ body {
       <button class="icon-btn" id="clearBtn" type="button" title="清空输入" aria-label="清空输入">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 4V6H15V4H9Z"></path></svg>
       </button>
+      <button class="icon-btn" id="privacyBtn" type="button" title="显示/隐藏所有金额" aria-label="切换金额显示">
+        <svg class="eye-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C17.3919 3 21.8714 6.88 22.8198 12C21.8714 17.12 17.3919 21 12 21C6.60808 21 2.12863 17.12 1.18018 12C2.12863 6.88 6.60808 3 12 3ZM12 19C16.2659 19 19.9351 16.0379 20.7787 12C19.9351 7.96212 16.2659 5 12 5C7.73414 5 4.06492 7.96212 3.22128 12C4.06492 16.0379 7.73414 19 12 19ZM12 16.5C9.51472 16.5 7.5 14.4853 7.5 12C7.5 9.51472 9.51472 7.5 12 7.5C14.4853 7.5 16.5 9.51472 16.5 12C16.5 14.4853 14.4853 16.5 12 16.5ZM12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z"></path></svg>
+        <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.8827 19.2968C16.1814 20.3755 14.1638 21.0002 12.0003 21.0002C6.60812 21.0002 2.12215 17.1204 1.18164 12.0002C1.61832 9.62282 2.81932 7.5129 4.52047 5.93457L1.39366 2.80777L2.80788 1.39355L22.6069 21.1925L21.1927 22.6068L17.8827 19.2968ZM5.9356 7.3497C4.60673 8.56015 3.6378 10.1672 3.22278 12.0002C4.14022 16.0521 7.7646 19.0002 12.0003 19.0002C13.5997 19.0002 15.112 18.5798 16.4243 17.8384L14.396 15.8101C13.7023 16.2472 12.8808 16.5002 12.0003 16.5002C9.51498 16.5002 7.50026 14.4854 7.50026 12.0002C7.50026 11.1196 7.75317 10.2981 8.19031 9.60442L5.9356 7.3497ZM12.9139 14.328L9.67246 11.0866C9.5613 11.3696 9.50026 11.6777 9.50026 12.0002C9.50026 13.3809 10.6196 14.5002 12.0003 14.5002C12.3227 14.5002 12.6309 14.4391 12.9139 14.328ZM20.8068 16.5925L19.376 15.1617C20.0319 14.2268 20.5154 13.1586 20.7777 12.0002C19.8603 7.94818 16.2359 5.00016 12.0003 5.00016C11.1544 5.00016 10.3329 5.11773 9.55249 5.33818L7.97446 3.76015C9.22127 3.26959 10.5793 3.00016 12.0003 3.00016C17.3924 3.00016 21.8784 6.87992 22.8189 12.0002C22.5067 13.6998 21.8038 15.2628 20.8068 16.5925ZM11.7229 7.50857C11.8146 7.50299 11.9071 7.50016 12.0003 7.50016C14.4855 7.50016 16.5003 9.51488 16.5003 12.0002C16.5003 12.0933 16.4974 12.1858 16.4919 12.2775L11.7229 7.50857Z"></path></svg>
+      </button>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -1078,8 +1491,8 @@ body {
     <div class="summary">
       <div class="metric">
         <p class="metric-label">收入总额</p>
-        <p class="metric-value" id="sumBudget">¥0</p>
-        <p class="metric-sub">RMB 等值</p>
+        <p class="metric-value editable" id="sumBudget" contenteditable="true" spellcheck="false" inputmode="numeric" title="点击修改本月收入">¥0</p>
+        <p class="metric-sub" id="sumBudgetSub">RMB 等值</p>
       </div>
       <div class="metric">
         <p class="metric-label">本月实际</p>
@@ -1204,1162 +1617,8 @@ body {
   if (initial === 'dashboard') switchTo('dashboard');
 })();
 </script>
-<script>
-// 预算配置
-// 修改这个文件来调整预算数字、分类、汇率等
-
-const CONFIG = {
-  // 汇率：1 HKD = 多少 CNY
-  // 建议每季度更新一次
-  exchangeRate: 0.87,
-
-  // 月收入（港币）
-  incomeHKD: 30000,
-
-  // 月份范围（选择器显示）
-  monthRange: {
-    start: { year: 2026, month: 6 },
-    end: { year: 2028, month: 12 }
-  },
-
-  // 储蓄率目标
-  savingsRateTarget: 0.35,
-};
-
-const SECTIONS = [
-  {
-    id: 'fixed',
-    title: '固定开销',
-    subtitle: '刚性支出，基本不变',
-    items: [
-      { id: 'rent', name: '房租 + 杂费', budget: 5554, cur: 'CNY' },
-      { id: 'car', name: '车贷', budget: 1666, cur: 'CNY' },
-      { id: 'social', name: '社保', budget: 1514, cur: 'CNY' },
-      { id: 'commute', name: '通勤', budget: 660, cur: 'CNY' },
-      { id: 'insurance', name: '其他保险', budget: 300, cur: 'CNY' },
-      { id: 'sub', name: '会员订阅', budget: 200, cur: 'CNY' },
-      { id: 'phone', name: '电话费', budget: 100, cur: 'CNY' }
-    ]
-  },
-  {
-    id: 'living',
-    title: '日常生活',
-    subtitle: '激进压缩版',
-    items: [
-      { id: 'food', name: '餐饮', budget: 2200, cur: 'CNY' },
-      { id: 'ent', name: '娱乐 / 社交', budget: 500, cur: 'CNY' },
-      { id: 'flex', name: '弹性缓冲', budget: 500, cur: 'CNY' },
-      { id: 'daily', name: '日用品', budget: 500, cur: 'CNY' },
-      { id: 'care', name: '个人护理', budget: 400, cur: 'CNY' },
-      { id: 'cloth', name: '服饰（月摊）', budget: 400, cur: 'CNY' },
-      { id: 'health', name: '健康 / 运动', budget: 500, cur: 'CNY' }
-    ]
-  },
-  {
-    id: 'savings',
-    title: '储蓄 + 投资',
-    subtitle: '多币种池子',
-    items: [
-      { id: 'rmb_em', name: 'RMB 应急金', budget: 2500, cur: 'CNY' },
-      { id: 'invest', name: '基金定投', budget: 2000, cur: 'HKD' },
-      { id: 'hkd_em', name: '港币应急金', budget: 2875, cur: 'HKD' },
-      { id: 'wedding', name: '婚礼基金', budget: 4800, cur: 'HKD' },
-      { id: 'buffer', name: '港币活期缓冲', budget: 25, cur: 'HKD' }
-    ]
-  }
-];
-
-
-// 月度预算记账工具 - 主逻辑
-const STORAGE_PREFIX = 'budget_tracker:';
-const INCOME_CNY = CONFIG.incomeHKD * CONFIG.exchangeRate;
-
-let currentMonth = '';
-let monthData = { actuals: {}, notes: '', saved_at: null };
-let dirty = false;
-
-// ============================================
-// 工具函数
-// ============================================
-
-function buildMonthOptions() {
-  const months = [];
-  const { start, end } = CONFIG.monthRange;
-  for (let y = start.year; y <= end.year; y++) {
-    const startM = y === start.year ? start.month : 1;
-    const endM = y === end.year ? end.month : 12;
-    for (let m = startM; m <= endM; m++) {
-      months.push(`${y}-${String(m).padStart(2, '0')}`);
-    }
-  }
-  return months;
-}
-
-function fmtCNY(n) { return '¥' + Math.round(n).toLocaleString('en-US'); }
-function fmtHKD(n) { return 'HK$' + Math.round(n).toLocaleString('en-US'); }
-function fmtByCur(n, cur) { return cur === 'CNY' ? fmtCNY(n) : fmtHKD(n); }
-function toCNY(n, cur) { return cur === 'CNY' ? n : n * CONFIG.exchangeRate; }
-
-// ============================================
-// 存储
-// ============================================
-
-function storageGet(key) {
-  try {
-    const v = localStorage.getItem(STORAGE_PREFIX + key);
-    return v ? JSON.parse(v) : null;
-  } catch (e) { return null; }
-}
-
-function storageSet(key, val) {
-  try {
-    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(val));
-    return true;
-  } catch (e) { return false; }
-}
-
-function getMonthsTracked() {
-  return storageGet('months_tracked') || [];
-}
-
-function addMonthTracked(month) {
-  const list = getMonthsTracked();
-  if (!list.includes(month)) {
-    list.push(month);
-    list.sort();
-    storageSet('months_tracked', list);
-  }
-}
-
-// ============================================
-// 渲染
-// ============================================
-
-// Remix Icon SVG（fill=currentColor 跟随文字色）
-const SECTION_ICONS = {
-  fixed:   '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.49a1 1 0 0 1 .386-.79l8-6.222a1 1 0 0 1 1.228 0l8 6.222a1 1 0 0 1 .386.79V20zm-2-1V9.978l-7-5.444-7 5.444V19h14z"/></svg>',
-  living:  '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 16V4H2V2h3a1 1 0 0 1 1 1v12h12.438l2-8H8V5h13.72a1 1 0 0 1 .97 1.243l-2.5 10A1 1 0 0 1 19.22 17H5a1 1 0 0 1-1-1zm2 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm12 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>',
-  savings: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a11 11 0 1 1 0 22 11 11 0 0 1 0-22zm0 2a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm-1 4h2v1h2v2h-4a.5.5 0 0 0 0 1h2a2.5 2.5 0 0 1 0 5h-1v1H10v-1H8v-2h4a.5.5 0 0 0 0-1h-2a2.5 2.5 0 0 1 0-5h1V7z"/></svg>',
-};
-
-function renderSections() {
-  const wrap = document.getElementById('sectionsWrap');
-  let html = '';
-  SECTIONS.forEach(sec => {
-    let budgetCNY = 0;
-    sec.items.forEach(i => { budgetCNY += toCNY(i.budget, i.cur); });
-    const icon = SECTION_ICONS[sec.id] || '';
-    html += `<div class="section" data-section="${sec.id}">
-      <div class="section-header">
-        <span class="section-title">${icon}${sec.title}</span>
-        <span class="section-sub">${sec.subtitle} · 预算 ${fmtCNY(budgetCNY)}</span>
-      </div>`;
-    sec.items.forEach(item => {
-      const curLabel = item.cur === 'CNY' ? 'RMB' : 'HKD';
-      html += `<div class="item-row">
-        <span class="item-name">${item.name}<span class="cur-pill">${curLabel}</span></span>
-        <span class="item-budget">${fmtByCur(item.budget, item.cur)}</span>
-        <input class="item-input" type="number" min="0" step="1" placeholder="${item.budget}" data-item="${item.id}" data-cur="${item.cur}" data-budget="${item.budget}" />
-        <span class="item-variance" data-var="${item.id}">—</span>
-      </div>`;
-    });
-    html += `<div class="section-footer">
-        <span>小计（RMB 等值）</span>
-        <span data-subtotal="${sec.id}">¥0 / ${fmtCNY(budgetCNY)}</span>
-      </div>
-      <div class="section-actions">
-        <button type="button" data-fill-section="${sec.id}">按预算填本组</button>
-      </div>
-    </div>`;
-  });
-  wrap.innerHTML = html;
-}
-
-function populateMonthPicker() {
-  const sel = document.getElementById('monthPicker');
-  const months = buildMonthOptions();
-  sel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-}
-
-// ============================================
-// 月份加载与计算
-// ============================================
-
-function loadMonth(m) {
-  currentMonth = m;
-  document.getElementById('monthPicker').value = m;
-  const saved = storageGet('month:' + m);
-  monthData = saved || { actuals: {}, notes: '', saved_at: null };
-  document.querySelectorAll('input[data-item]').forEach(inp => {
-    const id = inp.getAttribute('data-item');
-    const v = monthData.actuals ? monthData.actuals[id] : undefined;
-    inp.value = (v !== undefined && v !== null && v !== '') ? v : '';
-  });
-  document.getElementById('monthNotes').value = monthData.notes || '';
-  dirty = false;
-  updateSaveStatus();
-  recalc();
-}
-
-function updateSaveStatus() {
-  const el = document.getElementById('saveStatus');
-  if (dirty) {
-    el.textContent = '未保存 •';
-    el.classList.add('dirty');
-  } else if (monthData.saved_at) {
-    const d = new Date(monthData.saved_at);
-    const dateStr = d.getFullYear() + '-' +
-      String(d.getMonth() + 1).padStart(2, '0') + '-' +
-      String(d.getDate()).padStart(2, '0');
-    el.textContent = '已保存 ' + dateStr;
-    el.classList.remove('dirty');
-  } else {
-    el.textContent = '未保存';
-    el.classList.remove('dirty');
-  }
-}
-
-function recalc() {
-  let totalBudgetCNY = 0;
-  let totalActualCNY = 0;
-  let anyFilled = false;
-  let savingsActualCNY = 0;
-
-  SECTIONS.forEach(sec => {
-    let secBudget = 0;
-    let secActual = 0;
-    sec.items.forEach(item => {
-      const budCNY = toCNY(item.budget, item.cur);
-      secBudget += budCNY;
-      totalBudgetCNY += budCNY;
-      const inp = document.querySelector(`input[data-item="${item.id}"]`);
-      const raw = inp && inp.value !== '' ? parseFloat(inp.value) : null;
-      let actCNY = 0;
-      const varEl = document.querySelector(`[data-var="${item.id}"]`);
-      if (raw !== null && !isNaN(raw)) {
-        actCNY = toCNY(raw, item.cur);
-        secActual += actCNY;
-        totalActualCNY += actCNY;
-        anyFilled = true;
-        const diff = raw - item.budget;
-        if (diff === 0) {
-          varEl.textContent = '✓';
-          varEl.className = 'item-variance v-ok';
-        } else if (diff < 0) {
-          varEl.textContent = fmtByCur(Math.abs(diff), item.cur) + ' ↓';
-          varEl.className = 'item-variance v-ok';
-        } else {
-          varEl.textContent = '+' + fmtByCur(diff, item.cur);
-          varEl.className = 'item-variance v-over';
-        }
-      } else {
-        varEl.textContent = '—';
-        varEl.className = 'item-variance';
-      }
-      if (sec.id === 'savings' && raw !== null && !isNaN(raw)) {
-        savingsActualCNY += actCNY;
-      }
-    });
-    const subEl = document.querySelector(`[data-subtotal="${sec.id}"]`);
-    if (subEl) subEl.textContent = fmtCNY(secActual) + ' / ' + fmtCNY(secBudget);
-  });
-
-  document.getElementById('sumBudget').textContent = fmtCNY(INCOME_CNY);
-  if (anyFilled) {
-    document.getElementById('sumActual').textContent = fmtCNY(totalActualCNY);
-    const diff = totalBudgetCNY - totalActualCNY;
-    const sub = document.getElementById('sumActualSub');
-    if (diff >= 0) {
-      sub.textContent = '预算内 ' + fmtCNY(Math.abs(diff));
-      sub.style.color = 'var(--success)';
-    } else {
-      sub.textContent = '超支 ' + fmtCNY(Math.abs(diff));
-      sub.style.color = 'var(--danger)';
-    }
-    if (savingsActualCNY > 0) {
-      const rate = (savingsActualCNY / INCOME_CNY) * 100;
-      document.getElementById('sumRate').textContent = rate.toFixed(1) + '%';
-    } else {
-      document.getElementById('sumRate').textContent = '—';
-    }
-  } else {
-    document.getElementById('sumActual').textContent = '¥0';
-    document.getElementById('sumActualSub').textContent = '待填写';
-    document.getElementById('sumActualSub').style.color = 'var(--text-tertiary)';
-    document.getElementById('sumRate').textContent = '—';
-  }
-
-  renderPacman(totalActualCNY, totalBudgetCNY, anyFilled);
-}
-
-// ============================================
-// 吃豆人进度条
-// ============================================
-
-// 吃豆人（像素风，嘴巴朝右）
-const PAC_GRID = [
-  '..oooo..',
-  '.oooooo.',
-  'ooo.....',
-  'oo......',
-  'oo......',
-  'ooo.....',
-  '.oooooo.',
-  '..oooo..',
-];
-// 终点：像素爱心旗
-const GOAL_GRID = [
-  'yyyyyyyy',  // 旗顶
-  'yrryyrry',  // 爱心两个圆顶
-  'rhhrrhhr',  // 爱心中间
-  'rhhhhhhr',  // 爱心最宽
-  'yrhhhhry',  // 收窄
-  'yyrhhryy',
-  'yyyrryyy',  // 爱心尖
-  'yyyyyyyy',  // 旗底
-];
-
-function pixelArt(grid, cx, cy, px, palette) {
-  const offX = cx - 4 * px;
-  const offY = cy - 4 * px;
-  let html = '';
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const ch = grid[r][c];
-      const fill = palette[ch];
-      if (fill) {
-        html += `<rect x="${offX + c * px}" y="${offY + r * px}" width="${px}" height="${px}" fill="${fill}"/>`;
-      }
-    }
-  }
-  return html;
-}
-
-function renderPacman(actualCNY, budgetCNY, anyFilled) {
-  const svg = document.getElementById('pacmanSvg');
-  const status = document.getElementById('pacmanStatus');
-  const foot = document.getElementById('pacmanFoot');
-  if (!svg) return;
-
-  const W = 800, H = 56, midY = H / 2;
-  const px = 4;
-  const pacHalf = 4 * px;
-  const xStart = 8 + pacHalf;
-  const xApple = W - 8 - pacHalf;
-
-  const ratio = budgetCNY > 0 ? actualCNY / budgetCNY : 0;
-  let xPac;
-  if (ratio <= 1) {
-    xPac = xStart + Math.max(ratio, 0) * (xApple - xStart);
-  } else {
-    // 超支时让吃豆人略过苹果，最多伸出 24px
-    xPac = xApple + Math.min((ratio - 1) * 200, 24);
-  }
-
-  // 豆子均匀分布在轨道上
-  const dotCount = 22;
-  const dotStart = xStart + pacHalf + 6;
-  const dotEnd = xApple - pacHalf - 6;
-  const dotStep = (dotEnd - dotStart) / (dotCount - 1);
-
-  let html = '';
-  // 轨道暗色衬底（一条 thin line）
-  html += `<line x1="${xStart}" y1="${midY}" x2="${xApple}" y2="${midY}" stroke="var(--border-soft, rgba(15,14,11,0.18))" stroke-width="1" stroke-dasharray="2 4"/>`;
-
-  // 未吃掉的豆子
-  for (let i = 0; i < dotCount; i++) {
-    const dx = dotStart + i * dotStep;
-    if (dx > xPac + pacHalf - 2) {
-      html += `<rect x="${dx - 2}" y="${midY - 2}" width="4" height="4" fill="var(--text-secondary)" shape-rendering="crispEdges"/>`;
-    }
-  }
-
-  // 终点（用图片，超预算时淡化）
-  const goalSize = 32;
-  const goalOpacity = ratio > 1 ? 0.3 : 1;
-  html += `<image href="assets/flag.png" x="${xApple - goalSize / 2}" y="${midY - goalSize / 2}" width="${goalSize}" height="${goalSize}" opacity="${goalOpacity}" style="image-rendering:pixelated"/>`;
-
-  // 吃豆人（用图片）
-  const pacSize = 32;
-  const filter = ratio > 1 ? 'filter="hue-rotate(-30deg) saturate(1.3)"' : '';
-  html += `<image href="assets/douzi.png" x="${xPac - pacSize / 2}" y="${midY - pacSize / 2}" width="${pacSize}" height="${pacSize}" style="image-rendering:pixelated" ${filter}/>`;
-
-  svg.innerHTML = html;
-
-  // 状态文字
-  if (!anyFilled || budgetCNY <= 0) {
-    status.innerHTML = `预算 ${fmtCNY(budgetCNY)} · 待填写`;
-    foot.textContent = '吃完小豆豆抵达爱心 — 但别吃过头';
-    return;
-  }
-  const pct = Math.round(ratio * 100);
-  const remain = budgetCNY - actualCNY;
-  if (ratio <= 1) {
-    status.innerHTML = `已花 ${fmtCNY(actualCNY)} / 预算 ${fmtCNY(budgetCNY)} <span class="pacman-pct">${pct}%</span>`;
-    foot.textContent = remain > 0
-      ? `还剩 ${fmtCNY(remain)} 才到终点`
-      : '正好抵达终点，干得漂亮';
-  } else {
-    status.innerHTML = `已花 ${fmtCNY(actualCNY)} / 预算 ${fmtCNY(budgetCNY)} <span class="pacman-pct over">${pct}%</span>`;
-    foot.textContent = `超出预算 ${fmtCNY(-remain)} — 吃过头啦`;
-  }
-}
-
-// ============================================
-// 保存与历史
-// ============================================
-
-function saveMonth() {
-  const actuals = {};
-  document.querySelectorAll('input[data-item]').forEach(inp => {
-    const id = inp.getAttribute('data-item');
-    const v = inp.value;
-    if (v !== '') {
-      const n = parseFloat(v);
-      if (!isNaN(n)) actuals[id] = n;
-    }
-  });
-  const notes = document.getElementById('monthNotes').value;
-  const saved_at = new Date().toISOString();
-  const payload = { actuals, notes, saved_at };
-  const ok = storageSet('month:' + currentMonth, payload);
-  if (ok) {
-    addMonthTracked(currentMonth);
-    monthData = payload;
-    dirty = false;
-    updateSaveStatus();
-    showToast('已保存 ' + currentMonth);
-    renderHistory();
-  } else {
-    showToast('保存失败，请检查浏览器存储权限', true);
-  }
-}
-
-function showToast(msg, isErr) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isErr ? ' error' : '');
-  setTimeout(() => { t.classList.remove('show'); }, 2400);
-}
-
-function renderHistory() {
-  const list = document.getElementById('histList');
-  const months = getMonthsTracked();
-  if (!months.length) {
-    list.innerHTML = '<div class="empty">还没有保存过的月份，填完本月后点「保存本月」就会显示在这里。</div>';
-    return;
-  }
-  const totalBudgetCNY = SECTIONS.reduce((s, sec) =>
-    s + sec.items.reduce((ss, i) => ss + toCNY(i.budget, i.cur), 0), 0);
-  const rows = [];
-  months.slice().reverse().forEach(m => {
-    const data = storageGet('month:' + m);
-    let totalCNY = 0;
-    let savingsCNY = 0;
-    if (data && data.actuals) {
-      SECTIONS.forEach(sec => {
-        sec.items.forEach(item => {
-          const v = data.actuals[item.id];
-          if (v !== undefined && v !== null) {
-            const c = toCNY(v, item.cur);
-            totalCNY += c;
-            if (sec.id === 'savings') savingsCNY += c;
-          }
-        });
-      });
-    }
-    const diff = totalBudgetCNY - totalCNY;
-    const diffLabel = totalCNY === 0 ? '—' : (diff >= 0 ? '预算内' : '超支');
-    const diffClass = totalCNY === 0 ? '' : (diff >= 0 ? 'v-ok' : 'v-over');
-    const rate = savingsCNY > 0 ? ((savingsCNY / INCOME_CNY) * 100).toFixed(0) + '%' : '—';
-    rows.push(`<div class="history-row">
-      <span style="font-weight: 500;">${m}</span>
-      <span style="color: var(--text-secondary);">${totalCNY > 0 ? fmtCNY(totalCNY) : '空'}</span>
-      <span class="${diffClass}">${diffLabel}</span>
-      <span style="color: var(--text-secondary);">储蓄 ${rate}</span>
-      <button class="history-load" type="button" data-load="${m}">查看</button>
-    </div>`);
-  });
-  list.innerHTML = rows.join('');
-  list.querySelectorAll('[data-load]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      loadMonth(e.target.getAttribute('data-load'));
-    });
-  });
-}
-
-// ============================================
-// 导入导出
-// ============================================
-
-function exportData() {
-  const months = getMonthsTracked();
-  const data = {
-    exported_at: new Date().toISOString(),
-    version: 1,
-    months: {}
-  };
-  months.forEach(m => {
-    const d = storageGet('month:' + m);
-    if (d) data.months[m] = d;
-  });
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const ts = new Date().toISOString().slice(0, 10);
-  a.href = url;
-  a.download = `budget-backup-${ts}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('已导出备份文件');
-}
-
-function importData(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!data.months) throw new Error('格式不对');
-      let count = 0;
-      Object.keys(data.months).forEach(m => {
-        storageSet('month:' + m, data.months[m]);
-        addMonthTracked(m);
-        count++;
-      });
-      loadMonth(currentMonth);
-      renderHistory();
-      showToast(`已导入 ${count} 个月的数据`);
-    } catch (err) {
-      showToast('导入失败：文件格式不对', true);
-    }
-  };
-  reader.readAsText(file);
-}
-
-// ============================================
-// 事件绑定
-// ============================================
-
-function bindEvents() {
-  document.getElementById('sectionsWrap').addEventListener('input', (e) => {
-    if (e.target.matches('input[data-item]')) {
-      dirty = true;
-      updateSaveStatus();
-      recalc();
-    }
-  });
-
-  document.getElementById('sectionsWrap').addEventListener('click', (e) => {
-    const fill = e.target.getAttribute('data-fill-section');
-    if (fill) {
-      const sec = SECTIONS.find(s => s.id === fill);
-      sec.items.forEach(item => {
-        const inp = document.querySelector(`input[data-item="${item.id}"]`);
-        if (inp) inp.value = item.budget;
-      });
-      dirty = true;
-      updateSaveStatus();
-      recalc();
-    }
-  });
-
-  document.getElementById('monthPicker').addEventListener('change', (e) => {
-    loadMonth(e.target.value);
-  });
-
-  document.getElementById('prevMonth').addEventListener('click', () => {
-    const sel = document.getElementById('monthPicker');
-    if (sel.selectedIndex > 0) {
-      sel.selectedIndex -= 1;
-      loadMonth(sel.value);
-    }
-  });
-
-  document.getElementById('nextMonth').addEventListener('click', () => {
-    const sel = document.getElementById('monthPicker');
-    if (sel.selectedIndex < sel.options.length - 1) {
-      sel.selectedIndex += 1;
-      loadMonth(sel.value);
-    }
-  });
-
-  document.getElementById('saveBtn').addEventListener('click', saveMonth);
-
-  document.getElementById('clearBtn').addEventListener('click', () => {
-    if (!confirm('确定清空本月所有输入？')) return;
-    document.querySelectorAll('input[data-item]').forEach(inp => inp.value = '');
-    document.getElementById('monthNotes').value = '';
-    dirty = true;
-    updateSaveStatus();
-    recalc();
-  });
-
-  document.getElementById('fillBudgetBtn').addEventListener('click', () => {
-    SECTIONS.forEach(sec => {
-      sec.items.forEach(item => {
-        const inp = document.querySelector(`input[data-item="${item.id}"]`);
-        if (inp && inp.value === '') inp.value = item.budget;
-      });
-    });
-    dirty = true;
-    updateSaveStatus();
-    recalc();
-  });
-
-  document.getElementById('monthNotes').addEventListener('input', () => {
-    dirty = true;
-    updateSaveStatus();
-  });
-
-  document.getElementById('exportBtn').addEventListener('click', exportData);
-  document.getElementById('importBtn').addEventListener('click', () => {
-    document.getElementById('importFile').click();
-  });
-  document.getElementById('importFile').addEventListener('change', (e) => {
-    if (e.target.files.length) importData(e.target.files[0]);
-    e.target.value = '';
-  });
-
-  window.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-      e.preventDefault();
-      saveMonth();
-    }
-  });
-}
-
-// ============================================
-// 初始化
-// ============================================
-
-function setupBookName() {
-  const el = document.getElementById('bookName');
-  if (!el) return;
-  el.value = storageGet('book_name') || '我的账本';
-  el.addEventListener('blur', () => {
-    const v = el.value.trim();
-    storageSet('book_name', v);
-    if (!v) el.value = '我的账本';
-  });
-  el.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
-    if (e.key === 'Escape') {
-      el.value = storageGet('book_name') || '我的账本';
-      el.blur();
-    }
-  });
-}
-
-function init() {
-  setupBookName();
-  renderSections();
-  populateMonthPicker();
-  bindEvents();
-  let defaultMonth = `${CONFIG.monthRange.start.year}-${String(CONFIG.monthRange.start.month).padStart(2, '0')}`;
-  const tracked = getMonthsTracked();
-  if (tracked.length) defaultMonth = tracked[tracked.length - 1];
-  loadMonth(defaultMonth);
-  renderHistory();
-}
-
-init();
-
-</script>
-<script>
-window.__RECORDS__ = [{"d":"2025-05-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-05-01","t":"支出","c":"车","a":50.0,"n":"电费"},{"d":"2025-05-01","t":"支出","c":"亲友","a":71.6,"n":""},{"d":"2025-05-01","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2025-05-01","t":"支出","c":"医疗","a":230.0,"n":"康萃乐益生菌"},{"d":"2025-05-01","t":"支出","c":"日用","a":68.0,"n":""},{"d":"2025-05-01","t":"支出","c":"交通","a":21.9,"n":""},{"d":"2025-05-01","t":"支出","c":"服饰","a":89.0,"n":""},{"d":"2025-05-01","t":"支出","c":"服饰","a":139.0,"n":""},{"d":"2025-05-01","t":"支出","c":"服饰","a":223.0,"n":""},{"d":"2025-05-01","t":"支出","c":"宠物","a":207.0,"n":"驱虫"},{"d":"2025-05-01","t":"支出","c":"医疗","a":238.0,"n":"k2+镁"},{"d":"2025-05-01","t":"支出","c":"医疗","a":154.0,"n":"b族"},{"d":"2025-05-01","t":"支出","c":"日用","a":451.9,"n":"护肤"},{"d":"2025-05-02","t":"支出","c":"住房","a":5254.0,"n":""},{"d":"2025-05-02","t":"支出","c":"餐饮","a":59.0,"n":""},{"d":"2025-05-02","t":"支出","c":"亲友","a":59.0,"n":""},{"d":"2025-05-02","t":"支出","c":"亲友","a":100.0,"n":""},{"d":"2025-05-02","t":"支出","c":"日用","a":2.38,"n":""},{"d":"2025-05-02","t":"支出","c":"亲友","a":19.38,"n":""},{"d":"2025-05-03","t":"支出","c":"餐饮","a":15.0,"n":""},{"d":"2025-05-03","t":"支出","c":"宠物","a":131.0,"n":""},{"d":"2025-05-03","t":"支出","c":"交通","a":28.0,"n":""},{"d":"2025-05-03","t":"支出","c":"宠物","a":31.9,"n":""},{"d":"2025-05-04","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-05-04","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-05-04","t":"支出","c":"居家","a":109.65,"n":""},{"d":"2025-05-04","t":"支出","c":"车","a":91.0,"n":""},{"d":"2025-05-04","t":"支出","c":"车","a":169.0,"n":""},{"d":"2025-05-04","t":"支出","c":"车","a":29.1,"n":""},{"d":"2025-05-04","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2025-05-05","t":"支出","c":"日用","a":55.77,"n":"月抛"},{"d":"2025-05-05","t":"支出","c":"礼物","a":272.82,"n":"燕窝"},{"d":"2025-05-05","t":"支出","c":"日用","a":19.7,"n":""},{"d":"2025-05-05","t":"支出","c":"蔬菜","a":43.01,"n":""},{"d":"2025-05-05","t":"支出","c":"快递","a":14.0,"n":""},{"d":"2025-05-05","t":"支出","c":"交通","a":5.0,"n":""},{"d":"2025-05-05","t":"支出","c":"餐饮","a":34.0,"n":""},{"d":"2025-05-05","t":"支出","c":"餐饮","a":170.0,"n":""},{"d":"2025-05-05","t":"支出","c":"交通","a":5.0,"n":""},{"d":"2025-05-05","t":"支出","c":"日用","a":11.9,"n":""},{"d":"2025-05-06","t":"支出","c":"居家","a":12.6,"n":""},{"d":"2025-05-06","t":"支出","c":"居家","a":18.5,"n":""},{"d":"2025-05-06","t":"支出","c":"交通","a":68.0,"n":"高铁hk"},{"d":"2025-05-06","t":"支出","c":"餐饮","a":17.0,"n":""},{"d":"2025-05-06","t":"支出","c":"交通","a":31.5,"n":""},{"d":"2025-05-06","t":"支出","c":"日用","a":88.0,"n":"美甲"},{"d":"2025-05-06","t":"支出","c":"交通","a":29.4,"n":""},{"d":"2025-05-07","t":"支出","c":"交通","a":33.65,"n":""},{"d":"2025-05-07","t":"支出","c":"餐饮","a":24.9,"n":""},{"d":"2025-05-07","t":"支出","c":"网络","a":25.0,"n":"剪映"},{"d":"2025-05-07","t":"支出","c":"餐饮","a":26.9,"n":""},{"d":"2025-05-07","t":"支出","c":"餐饮","a":19.7,"n":""},{"d":"2025-05-07","t":"支出","c":"交通","a":31.5,"n":""},{"d":"2025-05-08","t":"支出","c":"通讯","a":10.0,"n":""},{"d":"2025-05-08","t":"支出","c":"交通","a":38.9,"n":""},{"d":"2025-05-08","t":"支出","c":"交通","a":9.86,"n":""},{"d":"2025-05-08","t":"支出","c":"宠物","a":35.75,"n":""},{"d":"2025-05-08","t":"支出","c":"交通","a":9.84,"n":""},{"d":"2025-05-08","t":"支出","c":"交通","a":12.6,"n":""},{"d":"2025-05-08","t":"支出","c":"交通","a":27.3,"n":""},{"d":"2025-05-08","t":"支出","c":"娱乐","a":196.0,"n":""},{"d":"2025-05-08","t":"支出","c":"交通","a":19.88,"n":""},{"d":"2025-05-08","t":"支出","c":"数码","a":28.8,"n":"表带"},{"d":"2025-05-09","t":"支出","c":"交通","a":22.4,"n":""},{"d":"2025-05-09","t":"支出","c":"餐饮","a":46.0,"n":""},{"d":"2025-05-09","t":"支出","c":"餐饮","a":12.7,"n":""},{"d":"2025-05-09","t":"支出","c":"网络","a":35.99,"n":"剪映"},{"d":"2025-05-09","t":"支出","c":"餐饮","a":33.0,"n":""},{"d":"2025-05-09","t":"支出","c":"交通","a":19.0,"n":""},{"d":"2025-05-09","t":"支出","c":"礼物","a":131.51,"n":""},{"d":"2025-05-10","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-05-10","t":"支出","c":"交通","a":14.29,"n":""},{"d":"2025-05-10","t":"支出","c":"餐饮","a":35.5,"n":""},{"d":"2025-05-10","t":"支出","c":"餐饮","a":180.0,"n":""},{"d":"2025-05-10","t":"支出","c":"餐饮","a":98.3,"n":""},{"d":"2025-05-10","t":"收入","c":"礼金","a":6000.0,"n":"fr yx🏠"},{"d":"2025-05-10","t":"支出","c":"礼物","a":900.0,"n":"613礼物"},{"d":"2025-05-11","t":"支出","c":"礼物","a":388.0,"n":"母亲节花"},{"d":"2025-05-11","t":"支出","c":"餐饮","a":60.0,"n":""},{"d":"2025-05-12","t":"支出","c":"通讯","a":24.0,"n":""},{"d":"2025-05-12","t":"支出","c":"餐饮","a":115.0,"n":""},{"d":"2025-05-12","t":"支出","c":"通讯","a":58.0,"n":""},{"d":"2025-05-12","t":"支出","c":"交通","a":24.0,"n":""},{"d":"2025-05-12","t":"支出","c":"交通","a":34.9,"n":""},{"d":"2025-05-12","t":"支出","c":"通讯","a":6.0,"n":""},{"d":"2025-05-13","t":"支出","c":"交通","a":25.7,"n":""},{"d":"2025-05-13","t":"支出","c":"交通","a":25.5,"n":""},{"d":"2025-05-14","t":"支出","c":"餐饮","a":31.0,"n":""},{"d":"2025-05-14","t":"支出","c":"交通","a":23.4,"n":""},{"d":"2025-05-14","t":"支出","c":"交通","a":20.9,"n":""},{"d":"2025-05-15","t":"支出","c":"交通","a":22.69,"n":""},{"d":"2025-05-15","t":"支出","c":"餐饮","a":18.0,"n":""},{"d":"2025-05-15","t":"支出","c":"餐饮","a":48.0,"n":""},{"d":"2025-05-15","t":"支出","c":"交通","a":9.8,"n":""},{"d":"2025-05-15","t":"支出","c":"交通","a":9.8,"n":""},{"d":"2025-05-15","t":"支出","c":"餐饮","a":134.0,"n":""},{"d":"2025-05-15","t":"支出","c":"日用","a":516.0,"n":""},{"d":"2025-05-15","t":"支出","c":"交通","a":14.9,"n":""},{"d":"2025-05-16","t":"支出","c":"餐饮","a":6.0,"n":""},{"d":"2025-05-16","t":"支出","c":"交通","a":22.2,"n":""},{"d":"2025-05-16","t":"支出","c":"餐饮","a":40.0,"n":""},{"d":"2025-05-16","t":"支出","c":"亲友","a":168.0,"n":"QQ音乐"},{"d":"2025-05-16","t":"支出","c":"餐饮","a":31.3,"n":""},{"d":"2025-05-16","t":"支出","c":"交通","a":37.0,"n":""},{"d":"2025-05-16","t":"支出","c":"娱乐","a":66.88,"n":""},{"d":"2025-05-17","t":"支出","c":"餐饮","a":46.88,"n":""},{"d":"2025-05-17","t":"支出","c":"服饰","a":25.9,"n":""},{"d":"2025-05-17","t":"支出","c":"服饰","a":203.45,"n":"大瓶"},{"d":"2025-05-18","t":"支出","c":"居家","a":268.0,"n":"除虫"},{"d":"2025-05-18","t":"支出","c":"餐饮","a":71.0,"n":""},{"d":"2025-05-18","t":"支出","c":"餐饮","a":59.9,"n":""},{"d":"2025-05-18","t":"支出","c":"餐饮","a":105.9,"n":""},{"d":"2025-05-18","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2025-05-18","t":"支出","c":"交通","a":5.0,"n":""},{"d":"2025-05-18","t":"支出","c":"交通","a":14.9,"n":""},{"d":"2025-05-19","t":"支出","c":"餐饮","a":23.77,"n":""},{"d":"2025-05-19","t":"支出","c":"餐饮","a":32.9,"n":""},{"d":"2025-05-19","t":"支出","c":"住房","a":212.64,"n":"物业管理费"},{"d":"2025-05-19","t":"支出","c":"交通","a":28.0,"n":""},{"d":"2025-05-19","t":"支出","c":"蔬菜","a":53.22,"n":""},{"d":"2025-05-19","t":"支出","c":"日用","a":50.9,"n":""},{"d":"2025-05-20","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-05-20","t":"支出","c":"餐饮","a":2.0,"n":""},{"d":"2025-05-20","t":"支出","c":"交通","a":31.83,"n":""},{"d":"2025-05-20","t":"支出","c":"餐饮","a":76.7,"n":""},{"d":"2025-05-20","t":"支出","c":"交通","a":3.0,"n":""},{"d":"2025-05-21","t":"支出","c":"交通","a":16.5,"n":""},{"d":"2025-05-21","t":"支出","c":"亲友","a":3175.2,"n":"爸妈体检"},{"d":"2025-05-21","t":"支出","c":"保险","a":1414.63,"n":"灵活就业"},{"d":"2025-05-21","t":"支出","c":"蔬菜","a":5.48,"n":""},{"d":"2025-05-21","t":"支出","c":"日用","a":71.9,"n":""},{"d":"2025-05-21","t":"支出","c":"交通","a":16.3,"n":""},{"d":"2025-05-21","t":"支出","c":"交通","a":13.9,"n":""},{"d":"2025-05-21","t":"支出","c":"蔬菜","a":5.5,"n":""},{"d":"2025-05-21","t":"支出","c":"交通","a":12.8,"n":""},{"d":"2025-05-21","t":"支出","c":"餐饮","a":41.0,"n":""},{"d":"2025-05-21","t":"支出","c":"餐饮","a":81.9,"n":""},{"d":"2025-05-21","t":"支出","c":"娱乐","a":10.0,"n":""},{"d":"2025-05-22","t":"支出","c":"日用","a":1.8,"n":""},{"d":"2025-05-22","t":"支出","c":"交通","a":15.3,"n":""},{"d":"2025-05-22","t":"支出","c":"餐饮","a":8.0,"n":""},{"d":"2025-05-22","t":"支出","c":"交通","a":36.74,"n":""},{"d":"2025-05-22","t":"支出","c":"交通","a":29.82,"n":""},{"d":"2025-05-22","t":"支出","c":"医疗","a":33.0,"n":"挂号"},{"d":"2025-05-23","t":"支出","c":"交通","a":34.03,"n":""},{"d":"2025-05-23","t":"支出","c":"餐饮","a":16.0,"n":""},{"d":"2025-05-23","t":"支出","c":"餐饮","a":54.0,"n":""},{"d":"2025-05-23","t":"支出","c":"餐饮","a":20.0,"n":""},{"d":"2025-05-23","t":"支出","c":"日用","a":20.0,"n":""},{"d":"2025-05-24","t":"支出","c":"交通","a":19.49,"n":""},{"d":"2025-05-25","t":"支出","c":"餐饮","a":35.81,"n":""},{"d":"2025-05-25","t":"支出","c":"餐饮","a":54.9,"n":""},{"d":"2025-05-25","t":"支出","c":"餐饮","a":135.5,"n":""},{"d":"2025-05-25","t":"支出","c":"蔬菜","a":134.5,"n":""},{"d":"2025-05-25","t":"支出","c":"服饰","a":198.24,"n":"Callmear"},{"d":"2025-05-26","t":"支出","c":"交通","a":15.5,"n":""},{"d":"2025-05-26","t":"支出","c":"餐饮","a":2.0,"n":""},{"d":"2025-05-26","t":"支出","c":"交通","a":40.0,"n":""},{"d":"2025-05-26","t":"支出","c":"餐饮","a":33.0,"n":""},{"d":"2025-05-27","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2025-05-27","t":"支出","c":"餐饮","a":2.0,"n":""},{"d":"2025-05-27","t":"支出","c":"交通","a":28.1,"n":""},{"d":"2025-05-27","t":"支出","c":"餐饮","a":33.4,"n":""},{"d":"2025-05-27","t":"支出","c":"餐饮","a":34.0,"n":""},{"d":"2025-05-27","t":"支出","c":"蔬菜","a":68.55,"n":""},{"d":"2025-05-27","t":"支出","c":"交通","a":3.0,"n":""},{"d":"2025-05-27","t":"支出","c":"日用","a":28.8,"n":""},{"d":"2025-05-27","t":"支出","c":"餐饮","a":79.0,"n":""},{"d":"2025-05-28","t":"支出","c":"餐饮","a":50.0,"n":""},{"d":"2025-05-28","t":"支出","c":"交通","a":23.2,"n":""},{"d":"2025-05-28","t":"支出","c":"快递","a":18.04,"n":""},{"d":"2025-05-28","t":"支出","c":"娱乐","a":492.0,"n":"ktv"},{"d":"2025-05-28","t":"支出","c":"交通","a":26.1,"n":""},{"d":"2025-05-28","t":"支出","c":"蔬菜","a":1.21,"n":""},{"d":"2025-05-28","t":"支出","c":"日用","a":117.0,"n":"氨甲环酸"},{"d":"2025-05-28","t":"支出","c":"日用","a":19.89,"n":""},{"d":"2025-05-28","t":"支出","c":"日用","a":260.1,"n":""},{"d":"2025-05-28","t":"支出","c":"日用","a":45.09,"n":""},{"d":"2025-05-28","t":"支出","c":"医疗","a":237.52,"n":"保健品"},{"d":"2025-05-29","t":"收入","c":"工资","a":27547.0,"n":""},{"d":"2025-05-29","t":"支出","c":"餐饮","a":10.8,"n":""},{"d":"2025-05-29","t":"支出","c":"交通","a":28.1,"n":""},{"d":"2025-05-29","t":"支出","c":"车","a":1666.66,"n":"车贷2"},{"d":"2025-05-29","t":"支出","c":"餐饮","a":239.0,"n":""},{"d":"2025-05-29","t":"支出","c":"服饰","a":24.8,"n":""},{"d":"2025-05-29","t":"支出","c":"娱乐","a":17.85,"n":""},{"d":"2025-05-29","t":"支出","c":"交通","a":3.0,"n":""},{"d":"2025-05-30","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-05-30","t":"支出","c":"交通","a":25.09,"n":""},{"d":"2025-05-30","t":"支出","c":"餐饮","a":28.9,"n":""},{"d":"2025-05-30","t":"支出","c":"餐饮","a":40.0,"n":""},{"d":"2025-05-30","t":"支出","c":"餐饮","a":260.0,"n":""},{"d":"2025-05-30","t":"支出","c":"娱乐","a":358.89,"n":""},{"d":"2025-05-30","t":"支出","c":"娱乐","a":228.0,"n":""},{"d":"2025-05-31","t":"支出","c":"蔬菜","a":25.07,"n":""},{"d":"2025-05-31","t":"支出","c":"餐饮","a":32.7,"n":""},{"d":"2025-05-31","t":"支出","c":"餐饮","a":25.0,"n":""},{"d":"2025-05-31","t":"支出","c":"蔬菜","a":37.28,"n":""},{"d":"2025-06-01","t":"支出","c":"宠物","a":37.63,"n":""},{"d":"2025-06-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-06-01","t":"支出","c":"住房","a":5253.97,"n":""},{"d":"2025-06-01","t":"支出","c":"餐饮","a":45.4,"n":""},{"d":"2025-06-01","t":"支出","c":"亲友","a":497.0,"n":"姐姐酒店"},{"d":"2025-06-01","t":"支出","c":"餐饮","a":177.0,"n":""},{"d":"2025-06-02","t":"支出","c":"宠物","a":30.51,"n":""},{"d":"2025-06-02","t":"支出","c":"服饰","a":443.49,"n":"mukok"},{"d":"2025-06-02","t":"支出","c":"蔬菜","a":76.5,"n":""},{"d":"2025-06-02","t":"支出","c":"餐饮","a":80.3,"n":""},{"d":"2025-06-03","t":"支出","c":"交通","a":28.88,"n":""},{"d":"2025-06-03","t":"支出","c":"居家","a":25.0,"n":""},{"d":"2025-06-03","t":"支出","c":"餐饮","a":10.0,"n":""},{"d":"2025-06-03","t":"支出","c":"蔬菜","a":7.0,"n":""},{"d":"2025-06-03","t":"支出","c":"交通","a":22.3,"n":""},{"d":"2025-06-04","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-06-04","t":"支出","c":"日用","a":69.77,"n":"月抛"},{"d":"2025-06-04","t":"支出","c":"服饰","a":87.3,"n":"拖鞋"},{"d":"2025-06-04","t":"支出","c":"服饰","a":22.77,"n":"胸贴"},{"d":"2025-06-05","t":"支出","c":"餐饮","a":42.0,"n":""},{"d":"2025-06-05","t":"支出","c":"餐饮","a":40.8,"n":""},{"d":"2025-06-05","t":"支出","c":"日用","a":96.0,"n":""},{"d":"2025-06-05","t":"支出","c":"办公","a":1722.0,"n":"Lottie vip😭🥺😤"},{"d":"2025-06-06","t":"支出","c":"餐饮","a":27.2,"n":""},{"d":"2025-06-06","t":"支出","c":"亲友","a":54.68,"n":"鱼缸净化"},{"d":"2025-06-06","t":"支出","c":"其他","a":180.0,"n":"证件照"},{"d":"2025-06-06","t":"支出","c":"餐饮","a":91.0,"n":""},{"d":"2025-06-06","t":"支出","c":"餐饮","a":9.0,"n":""},{"d":"2025-06-06","t":"支出","c":"亲友","a":17.8,"n":""},{"d":"2025-06-07","t":"支出","c":"快递","a":6.8,"n":""},{"d":"2025-06-07","t":"支出","c":"餐饮","a":323.0,"n":""},{"d":"2025-06-07","t":"支出","c":"礼物","a":42.84,"n":""},{"d":"2025-06-07","t":"支出","c":"餐饮","a":32.3,"n":""},{"d":"2025-06-08","t":"支出","c":"餐饮","a":28.2,"n":""},{"d":"2025-06-09","t":"支出","c":"交通","a":27.2,"n":""},{"d":"2025-06-09","t":"支出","c":"餐饮","a":24.48,"n":""},{"d":"2025-06-09","t":"支出","c":"住房","a":84.85,"n":"电费"},{"d":"2025-06-09","t":"支出","c":"蔬菜","a":20.0,"n":""},{"d":"2025-06-09","t":"支出","c":"交通","a":3.0,"n":""},{"d":"2025-06-09","t":"支出","c":"医疗","a":87.88,"n":"k2"},{"d":"2025-06-10","t":"支出","c":"车","a":50.0,"n":"电费"},{"d":"2025-06-10","t":"支出","c":"餐饮","a":4.0,"n":""},{"d":"2025-06-10","t":"支出","c":"交通","a":33.48,"n":""},{"d":"2025-06-10","t":"支出","c":"交通","a":7.0,"n":""},{"d":"2025-06-11","t":"支出","c":"交通","a":23.6,"n":""},{"d":"2025-06-11","t":"支出","c":"餐饮","a":30.0,"n":""},{"d":"2025-06-11","t":"收入","c":"闲置","a":90.0,"n":"Disney"},{"d":"2025-06-11","t":"支出","c":"运动","a":92.2,"n":""},{"d":"2025-06-11","t":"支出","c":"服饰","a":19.0,"n":""},{"d":"2025-06-11","t":"支出","c":"交通","a":25.0,"n":""},{"d":"2025-06-11","t":"支出","c":"日用","a":29.9,"n":""},{"d":"2025-06-11","t":"支出","c":"交通","a":15.0,"n":""},{"d":"2025-06-12","t":"支出","c":"餐饮","a":40.8,"n":""},{"d":"2025-06-13","t":"支出","c":"餐饮","a":37.0,"n":""},{"d":"2025-06-13","t":"支出","c":"交通","a":33.1,"n":""},{"d":"2025-06-14","t":"支出","c":"日用","a":19.9,"n":""},{"d":"2025-06-14","t":"支出","c":"礼物","a":169.2,"n":"车香"},{"d":"2025-06-14","t":"支出","c":"礼物","a":382.5,"n":"th短袖"},{"d":"2025-06-14","t":"支出","c":"服饰","a":19.9,"n":""},{"d":"2025-06-14","t":"支出","c":"餐饮","a":22.64,"n":""},{"d":"2025-06-14","t":"支出","c":"服饰","a":284.0,"n":"somi"},{"d":"2025-06-14","t":"支出","c":"服饰","a":164.84,"n":"yuyureal"},{"d":"2025-06-15","t":"支出","c":"居家","a":49.9,"n":"雨伞"},{"d":"2025-06-15","t":"支出","c":"餐饮","a":12.26,"n":""},{"d":"2025-06-15","t":"支出","c":"餐饮","a":39.7,"n":""},{"d":"2025-06-15","t":"支出","c":"蔬菜","a":36.76,"n":""},{"d":"2025-06-15","t":"支出","c":"餐饮","a":153.25,"n":""},{"d":"2025-06-15","t":"支出","c":"餐饮","a":27.5,"n":""},{"d":"2025-06-16","t":"支出","c":"车","a":58.7,"n":""},{"d":"2025-06-16","t":"支出","c":"交通","a":22.01,"n":""},{"d":"2025-06-16","t":"支出","c":"宠物","a":30.7,"n":""},{"d":"2025-06-16","t":"支出","c":"餐饮","a":22.36,"n":""},{"d":"2025-06-16","t":"支出","c":"交通","a":3.0,"n":""},{"d":"2025-06-17","t":"支出","c":"宠物","a":223.2,"n":""},{"d":"2025-06-18","t":"支出","c":"餐饮","a":8.0,"n":""},{"d":"2025-06-18","t":"支出","c":"交通","a":25.01,"n":""},{"d":"2025-06-18","t":"支出","c":"交通","a":14.23,"n":""},{"d":"2025-06-19","t":"支出","c":"居家","a":136.03,"n":""},{"d":"2025-06-19","t":"支出","c":"餐饮","a":42.1,"n":""},{"d":"2025-06-19","t":"支出","c":"日用","a":166.2,"n":""},{"d":"2025-06-19","t":"支出","c":"交通","a":23.9,"n":""},{"d":"2025-06-19","t":"支出","c":"餐饮","a":33.44,"n":""},{"d":"2025-06-19","t":"支出","c":"交通","a":3.0,"n":""},{"d":"2025-06-20","t":"支出","c":"交通","a":25.02,"n":""},{"d":"2025-06-20","t":"支出","c":"餐饮","a":29.0,"n":""},{"d":"2025-06-20","t":"支出","c":"餐饮","a":15.0,"n":""},{"d":"2025-06-20","t":"支出","c":"日用","a":2.84,"n":""},{"d":"2025-06-20","t":"支出","c":"交通","a":3.0,"n":""},{"d":"2025-06-20","t":"支出","c":"蔬菜","a":44.9,"n":""},{"d":"2025-06-21","t":"支出","c":"服饰","a":89.9,"n":"上衣"},{"d":"2025-06-21","t":"支出","c":"居家","a":9.9,"n":""},{"d":"2025-06-21","t":"支出","c":"日用","a":9.9,"n":""},{"d":"2025-06-21","t":"支出","c":"交通","a":13.97,"n":""},{"d":"2025-06-21","t":"支出","c":"餐饮","a":85.0,"n":""},{"d":"2025-06-21","t":"支出","c":"日用","a":183.0,"n":"美甲"},{"d":"2025-06-21","t":"支出","c":"医疗","a":33.0,"n":""},{"d":"2025-06-21","t":"支出","c":"交通","a":12.8,"n":""},{"d":"2025-06-21","t":"支出","c":"网络","a":26.5,"n":""},{"d":"2025-06-22","t":"支出","c":"快递","a":19.68,"n":""},{"d":"2025-06-22","t":"支出","c":"蔬菜","a":44.69,"n":""},{"d":"2025-06-22","t":"支出","c":"日用","a":16.8,"n":""},{"d":"2025-06-23","t":"支出","c":"交通","a":23.5,"n":""},{"d":"2025-06-23","t":"支出","c":"交通","a":22.5,"n":""},{"d":"2025-06-23","t":"支出","c":"餐饮","a":8.9,"n":""},{"d":"2025-06-23","t":"支出","c":"数码","a":13.9,"n":""},{"d":"2025-06-23","t":"支出","c":"保险","a":1414.63,"n":"灵活就业"},{"d":"2025-06-23","t":"支出","c":"餐饮","a":37.0,"n":""},{"d":"2025-06-23","t":"支出","c":"交通","a":3.0,"n":""},{"d":"2025-06-24","t":"支出","c":"餐饮","a":8.9,"n":""},{"d":"2025-06-24","t":"支出","c":"交通","a":33.83,"n":""},{"d":"2025-06-24","t":"支出","c":"餐饮","a":25.0,"n":""},{"d":"2025-06-24","t":"支出","c":"餐饮","a":32.2,"n":""},{"d":"2025-06-24","t":"支出","c":"亲友","a":69.0,"n":"防晒"},{"d":"2025-06-24","t":"支出","c":"交通","a":2.4,"n":""},{"d":"2025-06-24","t":"支出","c":"餐饮","a":14.5,"n":""},{"d":"2025-06-24","t":"支出","c":"交通","a":6.3,"n":""},{"d":"2025-06-25","t":"支出","c":"交通","a":22.64,"n":""},{"d":"2025-06-25","t":"支出","c":"餐饮","a":57.0,"n":""},{"d":"2025-06-25","t":"支出","c":"日用","a":369.0,"n":"卸妆油"},{"d":"2025-06-25","t":"支出","c":"交通","a":3.0,"n":""},{"d":"2025-06-25","t":"支出","c":"餐饮","a":62.0,"n":""},{"d":"2025-06-25","t":"支出","c":"服饰","a":169.9,"n":"花花"},{"d":"2025-06-26","t":"支出","c":"餐饮","a":16.8,"n":""},{"d":"2025-06-26","t":"支出","c":"交通","a":27.2,"n":""},{"d":"2025-06-26","t":"支出","c":"餐饮","a":26.1,"n":""},{"d":"2025-06-26","t":"支出","c":"交通","a":36.5,"n":""},{"d":"2025-06-27","t":"支出","c":"餐饮","a":12.8,"n":""},{"d":"2025-06-27","t":"支出","c":"交通","a":28.4,"n":""},{"d":"2025-06-27","t":"支出","c":"交通","a":17.13,"n":""},{"d":"2025-06-27","t":"收入","c":"工资","a":26029.0,"n":""},{"d":"2025-06-27","t":"支出","c":"交通","a":9.69,"n":""},{"d":"2025-06-27","t":"支出","c":"餐饮","a":327.33,"n":""},{"d":"2025-06-27","t":"支出","c":"交通","a":22.5,"n":""},{"d":"2025-06-27","t":"支出","c":"蔬菜","a":57.6,"n":""},{"d":"2025-06-27","t":"支出","c":"住房","a":5254.0,"n":""},{"d":"2025-06-28","t":"支出","c":"车","a":1666.66,"n":"车贷3"},{"d":"2025-06-28","t":"支出","c":"交通","a":70.0,"n":"地铁卡"},{"d":"2025-06-28","t":"支出","c":"娱乐","a":291.6,"n":"博德之门"},{"d":"2025-06-28","t":"支出","c":"餐饮","a":20.2,"n":""},{"d":"2025-06-28","t":"支出","c":"数码","a":20.9,"n":""},{"d":"2025-06-28","t":"支出","c":"网络","a":57.3,"n":"网飞"},{"d":"2025-06-29","t":"支出","c":"餐饮","a":65.97,"n":""},{"d":"2025-06-29","t":"支出","c":"亲友","a":142.5,"n":"妈妈墨镜"},{"d":"2025-06-29","t":"支出","c":"餐饮","a":13.9,"n":""},{"d":"2025-06-29","t":"支出","c":"其他","a":15.0,"n":""},{"d":"2025-06-29","t":"支出","c":"交通","a":10.5,"n":""},{"d":"2025-06-29","t":"支出","c":"交通","a":17.0,"n":""},{"d":"2025-06-29","t":"支出","c":"蔬菜","a":58.48,"n":""},{"d":"2025-06-29","t":"支出","c":"快递","a":5.87,"n":""},{"d":"2025-06-29","t":"支出","c":"宠物","a":8.8,"n":""},{"d":"2025-06-30","t":"支出","c":"交通","a":15.0,"n":""},{"d":"2025-06-30","t":"支出","c":"医疗","a":33.0,"n":""},{"d":"2025-06-30","t":"支出","c":"医疗","a":223.5,"n":""},{"d":"2025-06-30","t":"支出","c":"交通","a":39.5,"n":""},{"d":"2025-06-30","t":"支出","c":"餐饮","a":29.8,"n":""},{"d":"2025-06-30","t":"支出","c":"餐饮","a":13.0,"n":""},{"d":"2025-06-30","t":"支出","c":"餐饮","a":37.98,"n":""},{"d":"2025-07-01","t":"支出","c":"通讯","a":100.0,"n":""},{"d":"2025-07-01","t":"支出","c":"娱乐","a":118.0,"n":""},{"d":"2025-07-01","t":"支出","c":"服饰","a":237.0,"n":""},{"d":"2025-07-01","t":"支出","c":"餐饮","a":108.5,"n":""},{"d":"2025-07-01","t":"支出","c":"日用","a":12.6,"n":""},{"d":"2025-07-01","t":"支出","c":"交通","a":9.0,"n":""},{"d":"2025-07-02","t":"支出","c":"礼物","a":15.96,"n":"表带"},{"d":"2025-07-02","t":"支出","c":"数码","a":38.0,"n":"表带"},{"d":"2025-07-02","t":"支出","c":"交通","a":26.9,"n":""},{"d":"2025-07-02","t":"支出","c":"餐饮","a":75.0,"n":""},{"d":"2025-07-02","t":"支出","c":"交通","a":25.0,"n":""},{"d":"2025-07-02","t":"支出","c":"交通","a":14.8,"n":""},{"d":"2025-07-03","t":"支出","c":"交通","a":28.14,"n":""},{"d":"2025-07-03","t":"支出","c":"居家","a":3.9,"n":""},{"d":"2025-07-03","t":"支出","c":"餐饮","a":22.88,"n":""},{"d":"2025-07-03","t":"支出","c":"餐饮","a":24.9,"n":""},{"d":"2025-07-03","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2025-07-04","t":"支出","c":"日用","a":133.0,"n":"fresh"},{"d":"2025-07-04","t":"支出","c":"交通","a":28.3,"n":""},{"d":"2025-07-04","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-07-04","t":"支出","c":"餐饮","a":28.6,"n":""},{"d":"2025-07-04","t":"支出","c":"日用","a":15.91,"n":""},{"d":"2025-07-04","t":"支出","c":"餐饮","a":137.5,"n":""},{"d":"2025-07-04","t":"支出","c":"快递","a":18.0,"n":""},{"d":"2025-07-05","t":"支出","c":"餐饮","a":24.0,"n":""},{"d":"2025-07-05","t":"支出","c":"旅行","a":40.8,"n":""},{"d":"2025-07-05","t":"支出","c":"餐饮","a":14.0,"n":""},{"d":"2025-07-06","t":"支出","c":"餐饮","a":43.0,"n":""},{"d":"2025-07-06","t":"支出","c":"礼物","a":100.0,"n":"etc"},{"d":"2025-07-06","t":"支出","c":"餐饮","a":39.26,"n":""},{"d":"2025-07-06","t":"支出","c":"交通","a":9.0,"n":""},{"d":"2025-07-06","t":"支出","c":"餐饮","a":24.58,"n":""},{"d":"2025-07-07","t":"支出","c":"快递","a":5.87,"n":""},{"d":"2025-07-07","t":"支出","c":"交通","a":34.02,"n":""},{"d":"2025-07-07","t":"支出","c":"餐饮","a":45.8,"n":""},{"d":"2025-07-07","t":"支出","c":"餐饮","a":54.52,"n":""},{"d":"2025-07-07","t":"支出","c":"亲友","a":245.0,"n":"妈妈面膜"},{"d":"2025-07-07","t":"支出","c":"日用","a":371.0,"n":""},{"d":"2025-07-07","t":"支出","c":"娱乐","a":9.5,"n":""},{"d":"2025-07-08","t":"支出","c":"礼物","a":35.0,"n":"手表支架"},{"d":"2025-07-08","t":"支出","c":"餐饮","a":35.06,"n":""},{"d":"2025-07-08","t":"支出","c":"交通","a":26.7,"n":""},{"d":"2025-07-08","t":"支出","c":"餐饮","a":158.0,"n":""},{"d":"2025-07-08","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2025-07-08","t":"支出","c":"餐饮","a":18.0,"n":""},{"d":"2025-07-08","t":"支出","c":"服饰","a":149.11,"n":"CUTEioi"},{"d":"2025-07-08","t":"支出","c":"服饰","a":191.94,"n":"娃娃领"},{"d":"2025-07-08","t":"支出","c":"服饰","a":52.7,"n":"内衣"},{"d":"2025-07-08","t":"支出","c":"服饰","a":154.0,"n":"咖色裤"},{"d":"2025-07-09","t":"支出","c":"餐饮","a":33.0,"n":""},{"d":"2025-07-09","t":"支出","c":"交通","a":36.5,"n":""},{"d":"2025-07-09","t":"支出","c":"交通","a":15.0,"n":""},{"d":"2025-07-09","t":"支出","c":"餐饮","a":24.64,"n":""},{"d":"2025-07-09","t":"支出","c":"交通","a":14.08,"n":""},{"d":"2025-07-10","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-07-10","t":"支出","c":"餐饮","a":13.7,"n":""},{"d":"2025-07-10","t":"支出","c":"餐饮","a":30.8,"n":""},{"d":"2025-07-10","t":"支出","c":"快递","a":6.5,"n":""},{"d":"2025-07-10","t":"支出","c":"餐饮","a":100.8,"n":""},{"d":"2025-07-10","t":"支出","c":"餐饮","a":128.0,"n":"三明治"},{"d":"2025-07-10","t":"支出","c":"交通","a":7.0,"n":""},{"d":"2025-07-11","t":"支出","c":"餐饮","a":37.95,"n":""},{"d":"2025-07-11","t":"支出","c":"快递","a":21.0,"n":""},{"d":"2025-07-11","t":"支出","c":"住房","a":129.26,"n":"电费"},{"d":"2025-07-12","t":"支出","c":"运动","a":249.0,"n":""},{"d":"2025-07-12","t":"支出","c":"餐饮","a":10.7,"n":""},{"d":"2025-07-12","t":"支出","c":"会员","a":8.0,"n":""},{"d":"2025-07-12","t":"支出","c":"蔬菜","a":12.9,"n":""},{"d":"2025-07-12","t":"支出","c":"餐饮","a":41.3,"n":""},{"d":"2025-07-13","t":"支出","c":"蔬菜","a":42.28,"n":""},{"d":"2025-07-13","t":"支出","c":"亲友","a":39.9,"n":""},{"d":"2025-07-13","t":"支出","c":"餐饮","a":50.7,"n":""},{"d":"2025-07-13","t":"支出","c":"餐饮","a":35.0,"n":""},{"d":"2025-07-14","t":"支出","c":"交通","a":32.2,"n":""},{"d":"2025-07-14","t":"支出","c":"餐饮","a":29.04,"n":""},{"d":"2025-07-14","t":"支出","c":"交通","a":25.5,"n":""},{"d":"2025-07-14","t":"支出","c":"宠物","a":199.32,"n":""},{"d":"2025-07-14","t":"支出","c":"宠物","a":156.77,"n":""},{"d":"2025-07-14","t":"支出","c":"服饰","a":89.9,"n":"牛仔裤"},{"d":"2025-07-15","t":"支出","c":"交通","a":30.44,"n":""},{"d":"2025-07-15","t":"支出","c":"交通","a":25.0,"n":""},{"d":"2025-07-15","t":"支出","c":"交通","a":5.0,"n":""},{"d":"2025-07-15","t":"支出","c":"餐饮","a":92.0,"n":""},{"d":"2025-07-16","t":"支出","c":"交通","a":31.09,"n":""},{"d":"2025-07-16","t":"支出","c":"车","a":71.67,"n":""},{"d":"2025-07-16","t":"支出","c":"餐饮","a":34.8,"n":""},{"d":"2025-07-16","t":"支出","c":"餐饮","a":32.8,"n":""},{"d":"2025-07-16","t":"支出","c":"礼物","a":149.0,"n":"小鸡热水壶"},{"d":"2025-07-16","t":"支出","c":"餐饮","a":21.48,"n":""},{"d":"2025-07-17","t":"支出","c":"交通","a":22.9,"n":""},{"d":"2025-07-17","t":"支出","c":"数码","a":36.8,"n":"手机壳"},{"d":"2025-07-17","t":"支出","c":"亲友","a":619.0,"n":"酒店"},{"d":"2025-07-18","t":"支出","c":"会员","a":88.0,"n":"88vip"},{"d":"2025-07-18","t":"支出","c":"交通","a":20.2,"n":""},{"d":"2025-07-18","t":"支出","c":"餐饮","a":36.39,"n":""},{"d":"2025-07-18","t":"支出","c":"餐饮","a":22.0,"n":""},{"d":"2025-07-18","t":"支出","c":"亲友","a":323.08,"n":""},{"d":"2025-07-18","t":"支出","c":"交通","a":53.96,"n":""},{"d":"2025-07-19","t":"支出","c":"亲友","a":163.0,"n":"hk礼物美心"},{"d":"2025-07-19","t":"支出","c":"亲友","a":152.73,"n":"hk礼物零食物语"},{"d":"2025-07-19","t":"支出","c":"亲友","a":145.5,"n":"hk礼物万宁"},{"d":"2025-07-19","t":"支出","c":"餐饮","a":22.0,"n":""},{"d":"2025-07-19","t":"支出","c":"蔬菜","a":14.5,"n":""},{"d":"2025-07-19","t":"支出","c":"交通","a":19.0,"n":""},{"d":"2025-07-19","t":"支出","c":"居家","a":16.65,"n":""},{"d":"2025-07-19","t":"支出","c":"交通","a":13.0,"n":""},{"d":"2025-07-20","t":"支出","c":"交通","a":16.1,"n":""},{"d":"2025-07-20","t":"支出","c":"居家","a":2515.15,"n":"云鲸J5"},{"d":"2025-07-21","t":"支出","c":"服饰","a":29.99,"n":""},{"d":"2025-07-21","t":"支出","c":"保险","a":1414.63,"n":"灵活就业"},{"d":"2025-07-21","t":"支出","c":"居家","a":51.8,"n":""},{"d":"2025-07-21","t":"支出","c":"餐饮","a":13.61,"n":""},{"d":"2025-07-21","t":"支出","c":"居家","a":34.65,"n":""},{"d":"2025-07-21","t":"支出","c":"餐饮","a":29.0,"n":""},{"d":"2025-07-21","t":"支出","c":"餐饮","a":44.0,"n":""},{"d":"2025-07-22","t":"支出","c":"交通","a":40.5,"n":""},{"d":"2025-07-22","t":"支出","c":"蔬菜","a":93.0,"n":""},{"d":"2025-07-22","t":"支出","c":"礼物","a":112.0,"n":""},{"d":"2025-07-22","t":"支出","c":"餐饮","a":6.86,"n":""},{"d":"2025-07-22","t":"支出","c":"蔬菜","a":12.18,"n":""},{"d":"2025-07-23","t":"支出","c":"交通","a":26.9,"n":""},{"d":"2025-07-23","t":"支出","c":"餐饮","a":14.9,"n":""},{"d":"2025-07-24","t":"支出","c":"礼物","a":19.9,"n":""},{"d":"2025-07-24","t":"支出","c":"交通","a":54.81,"n":""},{"d":"2025-07-24","t":"支出","c":"交通","a":18.01,"n":""},{"d":"2025-07-24","t":"支出","c":"交通","a":53.86,"n":""},{"d":"2025-07-24","t":"支出","c":"通讯","a":27.0,"n":""},{"d":"2025-07-24","t":"支出","c":"餐饮","a":49.0,"n":""},{"d":"2025-07-24","t":"支出","c":"交通","a":19.06,"n":""},{"d":"2025-07-24","t":"支出","c":"蔬菜","a":18.8,"n":""},{"d":"2025-07-24","t":"支出","c":"宠物","a":76.26,"n":""},{"d":"2025-07-24","t":"支出","c":"餐饮","a":18.33,"n":""},{"d":"2025-07-24","t":"支出","c":"数码","a":8.0,"n":""},{"d":"2025-07-24","t":"支出","c":"服饰","a":79.0,"n":""},{"d":"2025-07-24","t":"支出","c":"运动","a":289.0,"n":""},{"d":"2025-07-24","t":"支出","c":"数码","a":15.3,"n":"表带"},{"d":"2025-07-24","t":"支出","c":"餐饮","a":55.6,"n":""},{"d":"2025-07-24","t":"支出","c":"运动","a":119.2,"n":""},{"d":"2025-07-25","t":"支出","c":"服饰","a":99.0,"n":""},{"d":"2025-07-25","t":"支出","c":"交通","a":22.7,"n":""},{"d":"2025-07-25","t":"支出","c":"餐饮","a":14.0,"n":""},{"d":"2025-07-26","t":"收入","c":"闲置","a":1320.0,"n":""},{"d":"2025-07-26","t":"支出","c":"其他","a":800.0,"n":"租地址"},{"d":"2025-07-26","t":"支出","c":"交通","a":17.5,"n":""},{"d":"2025-07-26","t":"支出","c":"餐饮","a":196.0,"n":""},{"d":"2025-07-26","t":"支出","c":"餐饮","a":98.0,"n":""},{"d":"2025-07-26","t":"支出","c":"交通","a":40.5,"n":""},{"d":"2025-07-27","t":"支出","c":"餐饮","a":31.0,"n":""},{"d":"2025-07-28","t":"支出","c":"交通","a":23.0,"n":""},{"d":"2025-07-28","t":"支出","c":"餐饮","a":53.0,"n":""},{"d":"2025-07-28","t":"支出","c":"交通","a":24.0,"n":""},{"d":"2025-07-28","t":"支出","c":"服饰","a":75.1,"n":""},{"d":"2025-07-28","t":"支出","c":"礼物","a":328.0,"n":""},{"d":"2025-07-29","t":"支出","c":"餐饮","a":6.0,"n":""},{"d":"2025-07-29","t":"支出","c":"交通","a":22.8,"n":""},{"d":"2025-07-29","t":"支出","c":"餐饮","a":39.0,"n":""},{"d":"2025-07-29","t":"支出","c":"住房","a":217.67,"n":""},{"d":"2025-07-29","t":"支出","c":"娱乐","a":222.8,"n":""},{"d":"2025-07-29","t":"支出","c":"娱乐","a":10.0,"n":""},{"d":"2025-07-29","t":"支出","c":"车","a":1666.66,"n":"车贷4"},{"d":"2025-07-29","t":"支出","c":"会员","a":88.0,"n":"杂物社"},{"d":"2025-07-30","t":"收入","c":"工资","a":26059.0,"n":""},{"d":"2025-07-30","t":"支出","c":"餐饮","a":15.5,"n":""},{"d":"2025-07-30","t":"支出","c":"交通","a":28.7,"n":""},{"d":"2025-07-30","t":"支出","c":"餐饮","a":25.2,"n":""},{"d":"2025-07-30","t":"支出","c":"礼物","a":75.8,"n":""},{"d":"2025-07-30","t":"支出","c":"餐饮","a":11.0,"n":""},{"d":"2025-07-31","t":"支出","c":"交通","a":33.9,"n":""},{"d":"2025-07-31","t":"支出","c":"餐饮","a":29.49,"n":""},{"d":"2025-07-31","t":"支出","c":"餐饮","a":2.0,"n":""},{"d":"2025-07-31","t":"支出","c":"餐饮","a":19.3,"n":""},{"d":"2025-07-31","t":"支出","c":"日用","a":70.0,"n":"半年抛"},{"d":"2025-07-31","t":"支出","c":"交通","a":42.9,"n":""},{"d":"2025-07-31","t":"支出","c":"日用","a":39.7,"n":""},{"d":"2025-08-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-08-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-08-01","t":"支出","c":"交通","a":18.5,"n":""},{"d":"2025-08-01","t":"支出","c":"住房","a":5253.92,"n":""},{"d":"2025-08-01","t":"支出","c":"日用","a":32.0,"n":""},{"d":"2025-08-01","t":"支出","c":"交通","a":11.0,"n":""},{"d":"2025-08-01","t":"支出","c":"日用","a":18.5,"n":""},{"d":"2025-08-01","t":"支出","c":"交通","a":5.0,"n":""},{"d":"2025-08-01","t":"支出","c":"旅行","a":1000.0,"n":"郴州民宿"},{"d":"2025-08-01","t":"支出","c":"旅行","a":321.0,"n":"仰天湖门票"},{"d":"2025-08-01","t":"支出","c":"旅行","a":264.5,"n":"高铁票"},{"d":"2025-08-01","t":"支出","c":"宠物","a":35.75,"n":""},{"d":"2025-08-01","t":"支出","c":"宠物","a":69.0,"n":"喷雾"},{"d":"2025-08-01","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2025-08-01","t":"支出","c":"娱乐","a":147.5,"n":""},{"d":"2025-08-01","t":"支出","c":"娱乐","a":113.7,"n":""},{"d":"2025-08-01","t":"支出","c":"居家","a":6.6,"n":""},{"d":"2025-08-01","t":"支出","c":"餐饮","a":54.1,"n":""},{"d":"2025-08-02","t":"支出","c":"日用","a":16.9,"n":""},{"d":"2025-08-02","t":"支出","c":"日用","a":135.0,"n":"气垫"},{"d":"2025-08-02","t":"支出","c":"日用","a":79.0,"n":""},{"d":"2025-08-02","t":"支出","c":"礼物","a":19.8,"n":""},{"d":"2025-08-02","t":"支出","c":"餐饮","a":34.8,"n":""},{"d":"2025-08-02","t":"支出","c":"日用","a":590.52,"n":"护肤"},{"d":"2025-08-03","t":"支出","c":"网络","a":57.6,"n":"网飞"},{"d":"2025-08-03","t":"支出","c":"礼物","a":55.51,"n":"HK同事"},{"d":"2025-08-03","t":"支出","c":"餐饮","a":19.6,"n":""},{"d":"2025-08-03","t":"支出","c":"餐饮","a":15.0,"n":""},{"d":"2025-08-03","t":"支出","c":"蔬菜","a":34.28,"n":""},{"d":"2025-08-03","t":"支出","c":"旅行","a":264.5,"n":"高铁票"},{"d":"2025-08-04","t":"支出","c":"交通","a":32.9,"n":""},{"d":"2025-08-04","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-08-04","t":"支出","c":"办公","a":21.0,"n":""},{"d":"2025-08-04","t":"支出","c":"餐饮","a":46.75,"n":""},{"d":"2025-08-04","t":"支出","c":"会员","a":7.99,"n":"芒果"},{"d":"2025-08-04","t":"支出","c":"交通","a":36.0,"n":""},{"d":"2025-08-05","t":"支出","c":"日用","a":97.54,"n":""},{"d":"2025-08-05","t":"支出","c":"快递","a":15.0,"n":""},{"d":"2025-08-05","t":"支出","c":"餐饮","a":17.4,"n":""},{"d":"2025-08-05","t":"支出","c":"餐饮","a":47.4,"n":""},{"d":"2025-08-05","t":"支出","c":"宠物","a":188.23,"n":""},{"d":"2025-08-05","t":"支出","c":"宠物","a":28.92,"n":""},{"d":"2025-08-05","t":"支出","c":"服饰","a":32.82,"n":""},{"d":"2025-08-06","t":"支出","c":"蔬菜","a":15.6,"n":""},{"d":"2025-08-06","t":"支出","c":"交通","a":27.3,"n":""},{"d":"2025-08-06","t":"支出","c":"餐饮","a":60.0,"n":""},{"d":"2025-08-07","t":"支出","c":"餐饮","a":4.0,"n":""},{"d":"2025-08-07","t":"支出","c":"亲友","a":109.9,"n":"地垫"},{"d":"2025-08-07","t":"支出","c":"办公","a":5.0,"n":""},{"d":"2025-08-07","t":"支出","c":"餐饮","a":46.5,"n":""},{"d":"2025-08-07","t":"支出","c":"交通","a":20.0,"n":""},{"d":"2025-08-08","t":"支出","c":"餐饮","a":20.76,"n":""},{"d":"2025-08-08","t":"支出","c":"交通","a":18.9,"n":""},{"d":"2025-08-08","t":"支出","c":"交通","a":53.91,"n":""},{"d":"2025-08-08","t":"支出","c":"交通","a":68.0,"n":""},{"d":"2025-08-08","t":"支出","c":"居家","a":122.0,"n":""},{"d":"2025-08-08","t":"支出","c":"旅行","a":430.0,"n":"日本签证费"},{"d":"2025-08-08","t":"支出","c":"餐饮","a":16.3,"n":""},{"d":"2025-08-08","t":"支出","c":"交通","a":63.5,"n":""},{"d":"2025-08-08","t":"支出","c":"网络","a":210.0,"n":""},{"d":"2025-08-08","t":"支出","c":"餐饮","a":79.54,"n":""},{"d":"2025-08-08","t":"支出","c":"服饰","a":87.92,"n":""},{"d":"2025-08-08","t":"支出","c":"日用","a":39.36,"n":""},{"d":"2025-08-08","t":"支出","c":"蔬菜","a":26.0,"n":""},{"d":"2025-08-08","t":"支出","c":"运动","a":149.1,"n":""},{"d":"2025-08-09","t":"支出","c":"蔬菜","a":140.17,"n":""},{"d":"2025-08-09","t":"支出","c":"餐饮","a":64.3,"n":""},{"d":"2025-08-10","t":"支出","c":"运动","a":299.0,"n":"乐刻"},{"d":"2025-08-10","t":"支出","c":"餐饮","a":27.0,"n":""},{"d":"2025-08-10","t":"支出","c":"餐饮","a":34.79,"n":""},{"d":"2025-08-11","t":"支出","c":"交通","a":22.3,"n":""},{"d":"2025-08-11","t":"支出","c":"礼物","a":53.19,"n":""},{"d":"2025-08-11","t":"支出","c":"娱乐","a":71.61,"n":""},{"d":"2025-08-11","t":"支出","c":"住房","a":160.41,"n":"电费"},{"d":"2025-08-12","t":"支出","c":"交通","a":33.9,"n":""},{"d":"2025-08-12","t":"支出","c":"快递","a":8.0,"n":""},{"d":"2025-08-12","t":"支出","c":"餐饮","a":9.0,"n":""},{"d":"2025-08-12","t":"支出","c":"蔬菜","a":29.85,"n":""},{"d":"2025-08-12","t":"支出","c":"餐饮","a":46.9,"n":""},{"d":"2025-08-13","t":"支出","c":"交通","a":33.9,"n":""},{"d":"2025-08-13","t":"支出","c":"餐饮","a":26.0,"n":""},{"d":"2025-08-13","t":"支出","c":"餐饮","a":54.93,"n":""},{"d":"2025-08-13","t":"支出","c":"餐饮","a":31.51,"n":""},{"d":"2025-08-13","t":"支出","c":"医疗","a":49.0,"n":"挂号"},{"d":"2025-08-14","t":"支出","c":"交通","a":20.6,"n":""},{"d":"2025-08-14","t":"支出","c":"餐饮","a":7.9,"n":""},{"d":"2025-08-14","t":"支出","c":"餐饮","a":2.89,"n":""},{"d":"2025-08-14","t":"支出","c":"日用","a":84.62,"n":""},{"d":"2025-08-15","t":"支出","c":"餐饮","a":21.8,"n":""},{"d":"2025-08-15","t":"支出","c":"交通","a":12.8,"n":""},{"d":"2025-08-15","t":"支出","c":"医疗","a":24.0,"n":""},{"d":"2025-08-15","t":"支出","c":"交通","a":34.4,"n":""},{"d":"2025-08-15","t":"支出","c":"娱乐","a":55.51,"n":""},{"d":"2025-08-15","t":"支出","c":"办公","a":36.0,"n":""},{"d":"2025-08-15","t":"支出","c":"日用","a":4.0,"n":""},{"d":"2025-08-15","t":"支出","c":"医疗","a":539.39,"n":"喉咙中药"},{"d":"2025-08-16","t":"支出","c":"餐饮","a":8.0,"n":""},{"d":"2025-08-16","t":"支出","c":"服饰","a":69.0,"n":""},{"d":"2025-08-16","t":"支出","c":"餐饮","a":132.89,"n":""},{"d":"2025-08-16","t":"支出","c":"交通","a":68.0,"n":"高铁hk"},{"d":"2025-08-16","t":"支出","c":"日用","a":39.0,"n":""},{"d":"2025-08-17","t":"支出","c":"餐饮","a":5.0,"n":""},{"d":"2025-08-17","t":"支出","c":"礼物","a":39.8,"n":""},{"d":"2025-08-17","t":"支出","c":"餐饮","a":13.6,"n":""},{"d":"2025-08-17","t":"支出","c":"快递","a":21.0,"n":""},{"d":"2025-08-17","t":"支出","c":"快递","a":5.87,"n":""},{"d":"2025-08-18","t":"支出","c":"车","a":53.07,"n":""},{"d":"2025-08-18","t":"支出","c":"交通","a":30.5,"n":""},{"d":"2025-08-18","t":"支出","c":"餐饮","a":14.8,"n":""},{"d":"2025-08-18","t":"支出","c":"餐饮","a":15.5,"n":""},{"d":"2025-08-18","t":"支出","c":"服饰","a":60.0,"n":""},{"d":"2025-08-18","t":"支出","c":"日用","a":9.4,"n":""},{"d":"2025-08-18","t":"支出","c":"旅行","a":501.0,"n":"珠海亚朵"},{"d":"2025-08-19","t":"收入","c":"闲置","a":113.0,"n":"GG鞋"},{"d":"2025-08-19","t":"支出","c":"服饰","a":9.9,"n":""},{"d":"2025-08-19","t":"支出","c":"交通","a":48.9,"n":""},{"d":"2025-08-19","t":"支出","c":"交通","a":54.0,"n":""},{"d":"2025-08-19","t":"支出","c":"餐饮","a":19.1,"n":""},{"d":"2025-08-19","t":"支出","c":"交通","a":11.9,"n":""},{"d":"2025-08-19","t":"支出","c":"交通","a":36.9,"n":""},{"d":"2025-08-19","t":"支出","c":"交通","a":30.69,"n":""},{"d":"2025-08-19","t":"支出","c":"服饰","a":2410.02,"n":"皮带"},{"d":"2025-08-20","t":"支出","c":"交通","a":26.02,"n":""},{"d":"2025-08-20","t":"支出","c":"餐饮","a":95.04,"n":""},{"d":"2025-08-20","t":"支出","c":"交通","a":12.0,"n":""},{"d":"2025-08-20","t":"支出","c":"居家","a":29.8,"n":""},{"d":"2025-08-20","t":"支出","c":"居家","a":126.0,"n":""},{"d":"2025-08-20","t":"支出","c":"住房","a":210.02,"n":""},{"d":"2025-08-20","t":"支出","c":"交通","a":15.61,"n":""},{"d":"2025-08-20","t":"支出","c":"旅行","a":305.0,"n":"行李额"},{"d":"2025-08-20","t":"支出","c":"餐饮","a":68.0,"n":""},{"d":"2025-08-20","t":"支出","c":"礼物","a":390.0,"n":"露小妹礼物"},{"d":"2025-08-20","t":"支出","c":"礼物","a":176.3,"n":"露小妹礼物"},{"d":"2025-08-20","t":"支出","c":"旅行","a":14.98,"n":""},{"d":"2025-08-21","t":"支出","c":"餐饮","a":21.6,"n":""},{"d":"2025-08-21","t":"支出","c":"旅行","a":784.15,"n":"京都酒店"},{"d":"2025-08-21","t":"支出","c":"旅行","a":1472.02,"n":"东京酒店2晚"},{"d":"2025-08-21","t":"支出","c":"旅行","a":174.7,"n":"旅游保险"},{"d":"2025-08-22","t":"支出","c":"旅行","a":54.72,"n":"转换插座"},{"d":"2025-08-22","t":"支出","c":"蔬菜","a":49.16,"n":""},{"d":"2025-08-22","t":"支出","c":"餐饮","a":90.84,"n":""},{"d":"2025-08-22","t":"支出","c":"交通","a":15.14,"n":""},{"d":"2025-08-22","t":"支出","c":"旅行","a":1655.66,"n":"大阪酒店2晚"},{"d":"2025-08-23","t":"支出","c":"餐饮","a":21.7,"n":""},{"d":"2025-08-23","t":"支出","c":"蔬菜","a":43.5,"n":""},{"d":"2025-08-23","t":"支出","c":"交通","a":16.9,"n":""},{"d":"2025-08-25","t":"支出","c":"餐饮","a":22.9,"n":""},{"d":"2025-08-25","t":"支出","c":"餐饮","a":29.9,"n":""},{"d":"2025-08-25","t":"支出","c":"餐饮","a":10.42,"n":""},{"d":"2025-08-25","t":"支出","c":"交通","a":35.9,"n":""},{"d":"2025-08-25","t":"支出","c":"保险","a":1414.63,"n":"灵活就业"},{"d":"2025-08-25","t":"支出","c":"餐饮","a":36.95,"n":""},{"d":"2025-08-25","t":"支出","c":"蔬菜","a":1.76,"n":""},{"d":"2025-08-26","t":"支出","c":"餐饮","a":7.23,"n":""},{"d":"2025-08-26","t":"支出","c":"交通","a":39.77,"n":""},{"d":"2025-08-26","t":"支出","c":"餐饮","a":40.0,"n":""},{"d":"2025-08-26","t":"支出","c":"宠物","a":130.0,"n":""},{"d":"2025-08-26","t":"支出","c":"宠物","a":56.7,"n":""},{"d":"2025-08-26","t":"支出","c":"日用","a":29.9,"n":""},{"d":"2025-08-26","t":"支出","c":"亲友","a":10.51,"n":""},{"d":"2025-08-27","t":"支出","c":"交通","a":29.4,"n":""},{"d":"2025-08-27","t":"支出","c":"蔬菜","a":25.7,"n":""},{"d":"2025-08-27","t":"支出","c":"餐饮","a":18.0,"n":""},{"d":"2025-08-27","t":"支出","c":"餐饮","a":32.48,"n":""},{"d":"2025-08-27","t":"支出","c":"服饰","a":162.1,"n":"大瓶"},{"d":"2025-08-28","t":"支出","c":"居家","a":30.86,"n":""},{"d":"2025-08-28","t":"支出","c":"餐饮","a":6.8,"n":""},{"d":"2025-08-28","t":"支出","c":"交通","a":25.92,"n":""},{"d":"2025-08-28","t":"支出","c":"会员","a":1.0,"n":""},{"d":"2025-08-28","t":"支出","c":"服饰","a":1700.0,"n":"定制longchamp"},{"d":"2025-08-28","t":"收入","c":"工资","a":26082.0,"n":""},{"d":"2025-08-28","t":"支出","c":"蔬菜","a":25.4,"n":""},{"d":"2025-08-28","t":"支出","c":"礼物","a":488.0,"n":"水晶手链"},{"d":"2025-08-28","t":"支出","c":"餐饮","a":20.8,"n":""},{"d":"2025-08-29","t":"支出","c":"亲友","a":39.9,"n":""},{"d":"2025-08-29","t":"支出","c":"交通","a":29.7,"n":""},{"d":"2025-08-29","t":"支出","c":"蔬菜","a":7.47,"n":""},{"d":"2025-08-29","t":"支出","c":"餐饮","a":293.0,"n":""},{"d":"2025-08-30","t":"支出","c":"餐饮","a":13.0,"n":""},{"d":"2025-08-30","t":"支出","c":"日用","a":67.09,"n":""},{"d":"2025-08-30","t":"支出","c":"餐饮","a":30.8,"n":""},{"d":"2025-08-30","t":"支出","c":"交通","a":17.73,"n":""},{"d":"2025-08-30","t":"支出","c":"交通","a":26.44,"n":""},{"d":"2025-08-30","t":"支出","c":"日用","a":34.14,"n":""},{"d":"2025-08-30","t":"支出","c":"日用","a":24.52,"n":""},{"d":"2025-08-31","t":"支出","c":"日用","a":34.6,"n":""},{"d":"2025-08-31","t":"支出","c":"餐饮","a":10.0,"n":""},{"d":"2025-08-31","t":"支出","c":"餐饮","a":25.0,"n":""},{"d":"2025-08-31","t":"支出","c":"餐饮","a":216.0,"n":""},{"d":"2025-08-31","t":"支出","c":"餐饮","a":12.0,"n":""},{"d":"2025-08-31","t":"支出","c":"交通","a":14.45,"n":""},{"d":"2025-08-31","t":"支出","c":"车","a":1666.66,"n":"车贷"},{"d":"2025-09-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-09-01","t":"支出","c":"餐饮","a":23.0,"n":""},{"d":"2025-09-01","t":"支出","c":"蔬菜","a":111.9,"n":""},{"d":"2025-09-01","t":"支出","c":"快递","a":7.0,"n":""},{"d":"2025-09-01","t":"支出","c":"礼物","a":255.5,"n":"月饼"},{"d":"2025-09-02","t":"支出","c":"交通","a":26.23,"n":""},{"d":"2025-09-02","t":"支出","c":"办公","a":5.34,"n":""},{"d":"2025-09-02","t":"支出","c":"日用","a":30.4,"n":""},{"d":"2025-09-02","t":"支出","c":"住房","a":5254.0,"n":""},{"d":"2025-09-02","t":"支出","c":"餐饮","a":15.0,"n":""},{"d":"2025-09-02","t":"支出","c":"交通","a":50.0,"n":""},{"d":"2025-09-02","t":"支出","c":"餐饮","a":29.2,"n":""},{"d":"2025-09-02","t":"支出","c":"蔬菜","a":4.38,"n":""},{"d":"2025-09-03","t":"支出","c":"交通","a":26.6,"n":""},{"d":"2025-09-03","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2025-09-03","t":"支出","c":"医疗","a":49.0,"n":""},{"d":"2025-09-03","t":"支出","c":"日用","a":111.78,"n":""},{"d":"2025-09-03","t":"支出","c":"日用","a":29.8,"n":""},{"d":"2025-09-03","t":"支出","c":"旅行","a":1054.0,"n":"大阪环球"},{"d":"2025-09-04","t":"支出","c":"餐饮","a":6.24,"n":""},{"d":"2025-09-04","t":"支出","c":"交通","a":33.87,"n":""},{"d":"2025-09-04","t":"支出","c":"餐饮","a":25.0,"n":""},{"d":"2025-09-04","t":"支出","c":"礼物","a":100.0,"n":"中元节"},{"d":"2025-09-04","t":"支出","c":"服饰","a":171.62,"n":"callmedear"},{"d":"2025-09-05","t":"支出","c":"交通","a":29.9,"n":""},{"d":"2025-09-05","t":"支出","c":"餐饮","a":76.75,"n":""},{"d":"2025-09-05","t":"支出","c":"餐饮","a":7.0,"n":""},{"d":"2025-09-05","t":"支出","c":"数码","a":40.5,"n":"手机壳"},{"d":"2025-09-05","t":"支出","c":"餐饮","a":42.1,"n":""},{"d":"2025-09-05","t":"支出","c":"餐饮","a":20.71,"n":""},{"d":"2025-09-05","t":"支出","c":"日用","a":88.0,"n":""},{"d":"2025-09-05","t":"支出","c":"礼物","a":69.0,"n":"水果"},{"d":"2025-09-06","t":"支出","c":"交通","a":17.9,"n":""},{"d":"2025-09-06","t":"支出","c":"餐饮","a":233.0,"n":""},{"d":"2025-09-06","t":"支出","c":"日用","a":23.6,"n":""},{"d":"2025-09-06","t":"支出","c":"餐饮","a":13.3,"n":""},{"d":"2025-09-07","t":"支出","c":"医疗","a":40.66,"n":""},{"d":"2025-09-07","t":"支出","c":"居家","a":36.29,"n":""},{"d":"2025-09-08","t":"支出","c":"蔬菜","a":33.28,"n":""},{"d":"2025-09-08","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-09-08","t":"支出","c":"餐饮","a":26.0,"n":""},{"d":"2025-09-08","t":"支出","c":"宠物","a":35.75,"n":""},{"d":"2025-09-09","t":"支出","c":"餐饮","a":28.11,"n":""},{"d":"2025-09-09","t":"支出","c":"运动","a":294.0,"n":""},{"d":"2025-09-10","t":"支出","c":"亲友","a":19.9,"n":""},{"d":"2025-09-10","t":"支出","c":"交通","a":35.95,"n":""},{"d":"2025-09-10","t":"支出","c":"餐饮","a":61.5,"n":""},{"d":"2025-09-10","t":"支出","c":"交通","a":20.0,"n":""},{"d":"2025-09-10","t":"支出","c":"交通","a":7.0,"n":""},{"d":"2025-09-10","t":"支出","c":"车","a":487.0,"n":"车载mic"},{"d":"2025-09-10","t":"支出","c":"居家","a":279.0,"n":"水牙线"},{"d":"2025-09-10","t":"支出","c":"日用","a":83.1,"n":""},{"d":"2025-09-11","t":"支出","c":"餐饮","a":6.8,"n":""},{"d":"2025-09-11","t":"支出","c":"交通","a":28.9,"n":""},{"d":"2025-09-11","t":"支出","c":"蔬菜","a":21.99,"n":""},{"d":"2025-09-11","t":"支出","c":"餐饮","a":23.5,"n":""},{"d":"2025-09-11","t":"支出","c":"住房","a":171.68,"n":"电费"},{"d":"2025-09-11","t":"支出","c":"餐饮","a":13.5,"n":""},{"d":"2025-09-11","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2025-09-11","t":"支出","c":"娱乐","a":69.0,"n":"宠物展"},{"d":"2025-09-12","t":"支出","c":"交通","a":29.98,"n":""},{"d":"2025-09-12","t":"支出","c":"交通","a":26.23,"n":""},{"d":"2025-09-12","t":"支出","c":"餐饮","a":23.0,"n":""},{"d":"2025-09-12","t":"支出","c":"餐饮","a":29.98,"n":""},{"d":"2025-09-13","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2025-09-13","t":"支出","c":"餐饮","a":29.9,"n":""},{"d":"2025-09-13","t":"支出","c":"日用","a":34.9,"n":""},{"d":"2025-09-13","t":"支出","c":"数码","a":17.71,"n":""},{"d":"2025-09-13","t":"支出","c":"交通","a":17.85,"n":""},{"d":"2025-09-13","t":"支出","c":"娱乐","a":64.0,"n":"游戏"},{"d":"2025-09-14","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2025-09-14","t":"支出","c":"日用","a":72.8,"n":"耳塞"},{"d":"2025-09-14","t":"支出","c":"亲友","a":67.5,"n":""},{"d":"2025-09-14","t":"支出","c":"日用","a":10.97,"n":""},{"d":"2025-09-14","t":"支出","c":"蔬菜","a":97.98,"n":""},{"d":"2025-09-15","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-09-15","t":"支出","c":"交通","a":31.32,"n":""},{"d":"2025-09-15","t":"支出","c":"餐饮","a":80.0,"n":"川菜聚餐"},{"d":"2025-09-15","t":"支出","c":"宠物","a":169.1,"n":""},{"d":"2025-09-16","t":"支出","c":"交通","a":28.8,"n":""},{"d":"2025-09-16","t":"支出","c":"餐饮","a":64.3,"n":""},{"d":"2025-09-16","t":"支出","c":"快递","a":40.0,"n":""},{"d":"2025-09-17","t":"支出","c":"餐饮","a":28.0,"n":""},{"d":"2025-09-17","t":"支出","c":"交通","a":22.1,"n":""},{"d":"2025-09-17","t":"支出","c":"餐饮","a":58.14,"n":""},{"d":"2025-09-17","t":"支出","c":"旅行","a":130.0,"n":"电话卡"},{"d":"2025-09-17","t":"支出","c":"服饰","a":204.25,"n":""},{"d":"2025-09-17","t":"支出","c":"蔬菜","a":28.53,"n":""},{"d":"2025-09-18","t":"支出","c":"交通","a":23.0,"n":""},{"d":"2025-09-18","t":"支出","c":"餐饮","a":61.0,"n":""},{"d":"2025-09-18","t":"支出","c":"餐饮","a":24.4,"n":""},{"d":"2025-09-19","t":"支出","c":"宠物","a":8.9,"n":""},{"d":"2025-09-19","t":"支出","c":"居家","a":24.69,"n":""},{"d":"2025-09-19","t":"支出","c":"交通","a":31.76,"n":""},{"d":"2025-09-19","t":"支出","c":"餐饮","a":20.8,"n":""},{"d":"2025-09-19","t":"支出","c":"住房","a":210.02,"n":"物业管理费"},{"d":"2025-09-20","t":"支出","c":"交通","a":25.9,"n":""},{"d":"2025-09-20","t":"支出","c":"娱乐","a":142.0,"n":""},{"d":"2025-09-20","t":"支出","c":"交通","a":25.5,"n":""},{"d":"2025-09-20","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-09-20","t":"支出","c":"交通","a":32.42,"n":""},{"d":"2025-09-20","t":"支出","c":"餐饮","a":27.9,"n":""},{"d":"2025-09-21","t":"支出","c":"办公","a":12.15,"n":""},{"d":"2025-09-21","t":"支出","c":"礼物","a":279.0,"n":"飞机模型"},{"d":"2025-09-21","t":"支出","c":"礼物","a":209.6,"n":"飞机模型"},{"d":"2025-09-22","t":"支出","c":"蔬菜","a":118.19,"n":""},{"d":"2025-09-22","t":"支出","c":"交通","a":11.6,"n":""},{"d":"2025-09-22","t":"支出","c":"居家","a":28.6,"n":""},{"d":"2025-09-22","t":"支出","c":"餐饮","a":14.0,"n":""},{"d":"2025-09-22","t":"支出","c":"居家","a":25.91,"n":""},{"d":"2025-09-22","t":"支出","c":"蔬菜","a":15.5,"n":""},{"d":"2025-09-23","t":"支出","c":"餐饮","a":47.3,"n":""},{"d":"2025-09-23","t":"支出","c":"旅行","a":364.5,"n":"高铁票"},{"d":"2025-09-23","t":"支出","c":"会员","a":6.98,"n":""},{"d":"2025-09-24","t":"支出","c":"餐饮","a":55.4,"n":""},{"d":"2025-09-25","t":"支出","c":"保险","a":1414.63,"n":"灵活就业"},{"d":"2025-09-25","t":"支出","c":"餐饮","a":9.9,"n":""},{"d":"2025-09-25","t":"支出","c":"交通","a":37.9,"n":""},{"d":"2025-09-25","t":"支出","c":"餐饮","a":35.5,"n":""},{"d":"2025-09-25","t":"支出","c":"餐饮","a":59.8,"n":""},{"d":"2025-09-25","t":"支出","c":"日用","a":980.0,"n":"医美"},{"d":"2025-09-25","t":"支出","c":"旅行","a":122.0,"n":"发型"},{"d":"2025-09-26","t":"支出","c":"日用","a":230.0,"n":"美甲"},{"d":"2025-09-26","t":"支出","c":"交通","a":22.0,"n":""},{"d":"2025-09-26","t":"支出","c":"办公","a":35.0,"n":"电脑包"},{"d":"2025-09-26","t":"支出","c":"餐饮","a":10.0,"n":""},{"d":"2025-09-26","t":"支出","c":"餐饮","a":26.9,"n":""},{"d":"2025-09-26","t":"支出","c":"餐饮","a":3.5,"n":""},{"d":"2025-09-27","t":"支出","c":"交通","a":20.0,"n":""},{"d":"2025-09-27","t":"支出","c":"快递","a":146.5,"n":""},{"d":"2025-09-27","t":"支出","c":"旅行","a":281.86,"n":"味千"},{"d":"2025-09-27","t":"支出","c":"旅行","a":480.0,"n":"icoca"},{"d":"2025-09-28","t":"支出","c":"旅行","a":71.41,"n":""},{"d":"2025-09-28","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-09-28","t":"支出","c":"旅行","a":71.0,"n":"去大阪"},{"d":"2025-09-29","t":"支出","c":"旅行","a":10.47,"n":""},{"d":"2025-09-29","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-09-30","t":"支出","c":"旅行","a":666.0,"n":"去东京"},{"d":"2025-09-30","t":"支出","c":"车","a":1666.66,"n":"车贷"},{"d":"2025-09-30","t":"支出","c":"礼物","a":50.0,"n":""},{"d":"2025-09-30","t":"支出","c":"旅行","a":2417.0,"n":"吃饭"},{"d":"2025-09-30","t":"支出","c":"旅行","a":100.0,"n":"hello Kitty"},{"d":"2025-09-30","t":"收入","c":"工资","a":26100.0,"n":""},{"d":"2025-10-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-10-01","t":"支出","c":"住房","a":5254.0,"n":"租房"},{"d":"2025-10-01","t":"支出","c":"其他","a":28.0,"n":"服务费"},{"d":"2025-10-02","t":"支出","c":"旅行","a":270.85,"n":"首都机场酒店"},{"d":"2025-10-02","t":"支出","c":"亲友","a":421.0,"n":""},{"d":"2025-10-02","t":"支出","c":"餐饮","a":19.8,"n":""},{"d":"2025-10-02","t":"支出","c":"会员","a":7.35,"n":""},{"d":"2025-10-02","t":"支出","c":"交通","a":40.0,"n":""},{"d":"2025-10-02","t":"支出","c":"旅行","a":1592.0,"n":"机场购物"},{"d":"2025-10-03","t":"支出","c":"交通","a":20.87,"n":""},{"d":"2025-10-03","t":"支出","c":"旅行","a":364.0,"n":"吃饭"},{"d":"2025-10-03","t":"支出","c":"亲友","a":35.1,"n":""},{"d":"2025-10-04","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-10-04","t":"支出","c":"餐饮","a":4.99,"n":""},{"d":"2025-10-04","t":"支出","c":"餐饮","a":24.4,"n":""},{"d":"2025-10-04","t":"支出","c":"服饰","a":658.0,"n":""},{"d":"2025-10-04","t":"支出","c":"服饰","a":400.0,"n":""},{"d":"2025-10-04","t":"支出","c":"交通","a":19.2,"n":""},{"d":"2025-10-05","t":"支出","c":"餐饮","a":44.0,"n":""},{"d":"2025-10-05","t":"支出","c":"交通","a":16.9,"n":""},{"d":"2025-10-05","t":"支出","c":"交通","a":143.0,"n":""},{"d":"2025-10-05","t":"支出","c":"交通","a":20.9,"n":""},{"d":"2025-10-05","t":"支出","c":"交通","a":19.1,"n":""},{"d":"2025-10-06","t":"支出","c":"宠物","a":375.8,"n":""},{"d":"2025-10-07","t":"支出","c":"快递","a":8.0,"n":""},{"d":"2025-10-07","t":"支出","c":"餐饮","a":5.0,"n":""},{"d":"2025-10-07","t":"支出","c":"礼物","a":59.7,"n":""},{"d":"2025-10-07","t":"支出","c":"餐饮","a":24.0,"n":""},{"d":"2025-10-07","t":"支出","c":"餐饮","a":28.0,"n":""},{"d":"2025-10-07","t":"支出","c":"餐饮","a":21.0,"n":""},{"d":"2025-10-07","t":"支出","c":"交通","a":67.5,"n":""},{"d":"2025-10-08","t":"支出","c":"交通","a":5.2,"n":""},{"d":"2025-10-08","t":"支出","c":"宠物","a":35.75,"n":""},{"d":"2025-10-08","t":"支出","c":"日用","a":2940.0,"n":""},{"d":"2025-10-08","t":"支出","c":"快递","a":12.0,"n":""},{"d":"2025-10-08","t":"支出","c":"日用","a":88.0,"n":""},{"d":"2025-10-08","t":"支出","c":"蔬菜","a":18.71,"n":""},{"d":"2025-10-08","t":"支出","c":"快递","a":15.4,"n":""},{"d":"2025-10-08","t":"支出","c":"交通","a":14.03,"n":""},{"d":"2025-10-08","t":"支出","c":"蔬菜","a":36.8,"n":""},{"d":"2025-10-08","t":"支出","c":"会员","a":15.0,"n":""},{"d":"2025-10-08","t":"支出","c":"亲友","a":13.0,"n":""},{"d":"2025-10-09","t":"支出","c":"快递","a":18.0,"n":""},{"d":"2025-10-09","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2025-10-09","t":"支出","c":"交通","a":32.7,"n":""},{"d":"2025-10-10","t":"支出","c":"交通","a":23.2,"n":""},{"d":"2025-10-10","t":"支出","c":"运动","a":249.0,"n":""},{"d":"2025-10-10","t":"支出","c":"服饰","a":138.0,"n":""},{"d":"2025-10-10","t":"支出","c":"餐饮","a":164.0,"n":""},{"d":"2025-10-10","t":"支出","c":"快递","a":28.26,"n":""},{"d":"2025-10-10","t":"支出","c":"日用","a":235.0,"n":"面膜"},{"d":"2025-10-10","t":"支出","c":"车","a":50.0,"n":"电费"},{"d":"2025-10-11","t":"支出","c":"餐饮","a":30.0,"n":""},{"d":"2025-10-11","t":"支出","c":"快递","a":18.0,"n":""},{"d":"2025-10-11","t":"支出","c":"车","a":142.52,"n":"电费"},{"d":"2025-10-11","t":"支出","c":"日用","a":19.8,"n":""},{"d":"2025-10-11","t":"支出","c":"餐饮","a":41.0,"n":""},{"d":"2025-10-11","t":"支出","c":"交通","a":21.37,"n":""},{"d":"2025-10-11","t":"支出","c":"其他","a":1288.0,"n":"周大福葫芦吊坠"},{"d":"2025-10-12","t":"支出","c":"餐饮","a":10.8,"n":""},{"d":"2025-10-12","t":"支出","c":"餐饮","a":31.5,"n":""},{"d":"2025-10-12","t":"支出","c":"礼物","a":465.24,"n":""},{"d":"2025-10-12","t":"支出","c":"快递","a":21.48,"n":""},{"d":"2025-10-13","t":"支出","c":"交通","a":23.18,"n":""},{"d":"2025-10-13","t":"支出","c":"餐饮","a":22.81,"n":""},{"d":"2025-10-13","t":"支出","c":"礼物","a":15.89,"n":""},{"d":"2025-10-13","t":"支出","c":"餐饮","a":6.0,"n":""},{"d":"2025-10-14","t":"支出","c":"餐饮","a":20.0,"n":""},{"d":"2025-10-14","t":"支出","c":"餐饮","a":75.1,"n":""},{"d":"2025-10-14","t":"支出","c":"餐饮","a":25.9,"n":""},{"d":"2025-10-14","t":"支出","c":"居家","a":71.58,"n":""},{"d":"2025-10-14","t":"支出","c":"学习","a":34.5,"n":""},{"d":"2025-10-15","t":"支出","c":"餐饮","a":2.0,"n":""},{"d":"2025-10-15","t":"支出","c":"交通","a":19.0,"n":""},{"d":"2025-10-15","t":"支出","c":"餐饮","a":86.9,"n":""},{"d":"2025-10-15","t":"支出","c":"餐饮","a":15.0,"n":""},{"d":"2025-10-15","t":"支出","c":"娱乐","a":65.9,"n":""},{"d":"2025-10-15","t":"支出","c":"居家","a":170.05,"n":""},{"d":"2025-10-15","t":"支出","c":"其他","a":237.6,"n":"金配件"},{"d":"2025-10-16","t":"支出","c":"礼物","a":1899.0,"n":"耳机🎂"},{"d":"2025-10-16","t":"支出","c":"礼物","a":1062.0,"n":"高达🎂"},{"d":"2025-10-16","t":"支出","c":"交通","a":31.0,"n":""},{"d":"2025-10-16","t":"支出","c":"餐饮","a":26.2,"n":""},{"d":"2025-10-16","t":"支出","c":"快递","a":7.7,"n":""},{"d":"2025-10-16","t":"支出","c":"餐饮","a":18.9,"n":""},{"d":"2025-10-16","t":"支出","c":"餐饮","a":49.4,"n":""},{"d":"2025-10-17","t":"支出","c":"餐饮","a":20.5,"n":""},{"d":"2025-10-17","t":"支出","c":"交通","a":20.9,"n":""},{"d":"2025-10-17","t":"收入","c":"闲置","a":391.0,"n":"coach"},{"d":"2025-10-17","t":"支出","c":"餐饮","a":114.34,"n":""},{"d":"2025-10-17","t":"支出","c":"餐饮","a":9.5,"n":""},{"d":"2025-10-17","t":"支出","c":"餐饮","a":14.2,"n":""},{"d":"2025-10-17","t":"支出","c":"交通","a":20.4,"n":""},{"d":"2025-10-17","t":"支出","c":"车","a":50.0,"n":"电费"},{"d":"2025-10-18","t":"支出","c":"宠物","a":53.0,"n":""},{"d":"2025-10-18","t":"支出","c":"餐饮","a":14.0,"n":""},{"d":"2025-10-18","t":"支出","c":"餐饮","a":164.0,"n":""},{"d":"2025-10-18","t":"支出","c":"餐饮","a":13.7,"n":""},{"d":"2025-10-18","t":"支出","c":"居家","a":7.2,"n":""},{"d":"2025-10-18","t":"支出","c":"其他","a":228.6,"n":"金配件"},{"d":"2025-10-19","t":"支出","c":"餐饮","a":77.0,"n":""},{"d":"2025-10-19","t":"支出","c":"交通","a":13.0,"n":""},{"d":"2025-10-19","t":"支出","c":"餐饮","a":85.99,"n":""},{"d":"2025-10-19","t":"支出","c":"日用","a":29.9,"n":""},{"d":"2025-10-19","t":"支出","c":"餐饮","a":46.4,"n":""},{"d":"2025-10-19","t":"支出","c":"亲友","a":96.8,"n":""},{"d":"2025-10-19","t":"支出","c":"宠物","a":23.28,"n":""},{"d":"2025-10-20","t":"支出","c":"交通","a":14.12,"n":""},{"d":"2025-10-20","t":"支出","c":"交通","a":50.0,"n":""},{"d":"2025-10-20","t":"支出","c":"通讯","a":25.82,"n":""},{"d":"2025-10-20","t":"支出","c":"交通","a":55.0,"n":""},{"d":"2025-10-20","t":"支出","c":"餐饮","a":35.9,"n":""},{"d":"2025-10-20","t":"支出","c":"餐饮","a":14.5,"n":""},{"d":"2025-10-20","t":"支出","c":"交通","a":18.03,"n":""},{"d":"2025-10-20","t":"支出","c":"蔬菜","a":44.7,"n":""},{"d":"2025-10-20","t":"支出","c":"礼物","a":29.0,"n":""},{"d":"2025-10-20","t":"支出","c":"宠物","a":266.64,"n":""},{"d":"2025-10-20","t":"支出","c":"亲友","a":1432.1,"n":"爸爸羽绒"},{"d":"2025-10-21","t":"支出","c":"住房","a":213.43,"n":"物业管理费"},{"d":"2025-10-21","t":"支出","c":"交通","a":29.25,"n":""},{"d":"2025-10-21","t":"支出","c":"医疗","a":91.6,"n":""},{"d":"2025-10-21","t":"支出","c":"保险","a":1414.63,"n":"灵活就业"},{"d":"2025-10-21","t":"支出","c":"居家","a":20.3,"n":""},{"d":"2025-10-21","t":"支出","c":"亲友","a":52.3,"n":""},{"d":"2025-10-22","t":"支出","c":"餐饮","a":4.0,"n":""},{"d":"2025-10-22","t":"支出","c":"餐饮","a":27.2,"n":""},{"d":"2025-10-22","t":"支出","c":"车","a":1666.66,"n":"车贷"},{"d":"2025-10-22","t":"收入","c":"闲置","a":80.0,"n":"发箍"},{"d":"2025-10-22","t":"支出","c":"餐饮","a":110.0,"n":""},{"d":"2025-10-22","t":"支出","c":"娱乐","a":15.0,"n":""},{"d":"2025-10-22","t":"支出","c":"车","a":50.0,"n":"电费"},{"d":"2025-10-23","t":"支出","c":"交通","a":19.5,"n":""},{"d":"2025-10-23","t":"支出","c":"餐饮","a":24.9,"n":""},{"d":"2025-10-23","t":"支出","c":"餐饮","a":32.0,"n":""},{"d":"2025-10-23","t":"支出","c":"娱乐","a":39.8,"n":""},{"d":"2025-10-23","t":"支出","c":"蔬菜","a":28.96,"n":""},{"d":"2025-10-24","t":"支出","c":"交通","a":19.1,"n":""},{"d":"2025-10-24","t":"支出","c":"餐饮","a":200.0,"n":""},{"d":"2025-10-24","t":"支出","c":"餐饮","a":13.0,"n":""},{"d":"2025-10-24","t":"支出","c":"餐饮","a":25.9,"n":""},{"d":"2025-10-25","t":"支出","c":"蔬菜","a":92.17,"n":""},{"d":"2025-10-25","t":"支出","c":"餐饮","a":39.0,"n":""},{"d":"2025-10-26","t":"支出","c":"交通","a":15.3,"n":""},{"d":"2025-10-26","t":"支出","c":"日用","a":13.9,"n":""},{"d":"2025-10-26","t":"支出","c":"餐饮","a":47.06,"n":""},{"d":"2025-10-26","t":"支出","c":"快递","a":7.5,"n":""},{"d":"2025-10-26","t":"支出","c":"日用","a":39.0,"n":""},{"d":"2025-10-26","t":"支出","c":"礼物","a":54.5,"n":""},{"d":"2025-10-26","t":"支出","c":"餐饮","a":46.8,"n":""},{"d":"2025-10-27","t":"支出","c":"礼物","a":38.8,"n":""},{"d":"2025-10-27","t":"支出","c":"礼物","a":12.0,"n":""},{"d":"2025-10-27","t":"支出","c":"礼物","a":19.65,"n":""},{"d":"2025-10-27","t":"支出","c":"礼物","a":9.6,"n":""},{"d":"2025-10-27","t":"支出","c":"礼物","a":31.0,"n":""},{"d":"2025-10-27","t":"支出","c":"礼物","a":198.0,"n":"蛋糕"},{"d":"2025-10-27","t":"支出","c":"餐饮","a":110.0,"n":""},{"d":"2025-10-27","t":"支出","c":"餐饮","a":34.9,"n":""},{"d":"2025-10-28","t":"支出","c":"交通","a":24.4,"n":""},{"d":"2025-10-28","t":"支出","c":"餐饮","a":20.8,"n":""},{"d":"2025-10-28","t":"支出","c":"车","a":50.0,"n":"电费"},{"d":"2025-10-29","t":"支出","c":"餐饮","a":40.89,"n":""},{"d":"2025-10-29","t":"支出","c":"宠物","a":5.6,"n":""},{"d":"2025-10-30","t":"支出","c":"交通","a":24.9,"n":""},{"d":"2025-10-30","t":"支出","c":"餐饮","a":31.8,"n":""},{"d":"2025-10-30","t":"收入","c":"工资","a":26075.0,"n":""},{"d":"2025-10-30","t":"支出","c":"蔬菜","a":19.47,"n":""},{"d":"2025-10-30","t":"支出","c":"餐饮","a":52.5,"n":""},{"d":"2025-10-30","t":"支出","c":"宠物","a":72.0,"n":"衣服"},{"d":"2025-10-30","t":"支出","c":"宠物","a":43.92,"n":"衣服"},{"d":"2025-10-30","t":"支出","c":"娱乐","a":17.7,"n":""},{"d":"2025-10-30","t":"支出","c":"娱乐","a":24.0,"n":""},{"d":"2025-10-30","t":"支出","c":"餐饮","a":46.9,"n":""},{"d":"2025-10-31","t":"支出","c":"交通","a":20.9,"n":""},{"d":"2025-10-31","t":"支出","c":"餐饮","a":67.57,"n":""},{"d":"2025-10-31","t":"支出","c":"服饰","a":1900.0,"n":"珑骧手机包"},{"d":"2025-10-31","t":"支出","c":"餐饮","a":53.0,"n":""},{"d":"2025-10-31","t":"支出","c":"餐饮","a":13.0,"n":""},{"d":"2025-10-31","t":"支出","c":"娱乐","a":170.0,"n":""},{"d":"2025-11-01","t":"支出","c":"交通","a":31.27,"n":""},{"d":"2025-11-01","t":"支出","c":"餐饮","a":191.0,"n":""},{"d":"2025-11-01","t":"支出","c":"数码","a":6.0,"n":""},{"d":"2025-11-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-11-01","t":"支出","c":"交通","a":42.32,"n":""},{"d":"2025-11-01","t":"支出","c":"餐饮","a":33.7,"n":""},{"d":"2025-11-01","t":"支出","c":"住房","a":5254.0,"n":""},{"d":"2025-11-01","t":"支出","c":"居家","a":41.5,"n":""},{"d":"2025-11-01","t":"支出","c":"娱乐","a":323.2,"n":""},{"d":"2025-11-01","t":"支出","c":"交通","a":44.1,"n":""},{"d":"2025-11-01","t":"支出","c":"其他","a":28.0,"n":"服务费"},{"d":"2025-11-02","t":"支出","c":"蔬菜","a":213.3,"n":""},{"d":"2025-11-02","t":"支出","c":"居家","a":24.5,"n":""},{"d":"2025-11-02","t":"支出","c":"日用","a":11.8,"n":""},{"d":"2025-11-03","t":"支出","c":"交通","a":20.4,"n":""},{"d":"2025-11-03","t":"支出","c":"餐饮","a":18.5,"n":""},{"d":"2025-11-03","t":"支出","c":"餐饮","a":6.0,"n":""},{"d":"2025-11-03","t":"支出","c":"娱乐","a":154.9,"n":""},{"d":"2025-11-03","t":"支出","c":"蔬菜","a":4.62,"n":""},{"d":"2025-11-03","t":"支出","c":"车","a":1666.66,"n":"车贷"},{"d":"2025-11-03","t":"支出","c":"交通","a":20.0,"n":""},{"d":"2025-11-04","t":"支出","c":"交通","a":32.0,"n":""},{"d":"2025-11-04","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-11-04","t":"支出","c":"餐饮","a":16.0,"n":""},{"d":"2025-11-04","t":"支出","c":"娱乐","a":59.0,"n":""},{"d":"2025-11-04","t":"支出","c":"餐饮","a":8.9,"n":""},{"d":"2025-11-04","t":"支出","c":"居家","a":44.4,"n":""},{"d":"2025-11-05","t":"支出","c":"交通","a":29.68,"n":""},{"d":"2025-11-05","t":"支出","c":"通讯","a":5.0,"n":""},{"d":"2025-11-05","t":"支出","c":"宠物","a":38.8,"n":""},{"d":"2025-11-05","t":"支出","c":"日用","a":78.0,"n":""},{"d":"2025-11-05","t":"支出","c":"日用","a":77.0,"n":""},{"d":"2025-11-06","t":"支出","c":"餐饮","a":15.7,"n":""},{"d":"2025-11-06","t":"支出","c":"餐饮","a":20.3,"n":""},{"d":"2025-11-07","t":"支出","c":"餐饮","a":525.55,"n":""},{"d":"2025-11-07","t":"支出","c":"交通","a":31.0,"n":""},{"d":"2025-11-07","t":"支出","c":"餐饮","a":38.9,"n":""},{"d":"2025-11-07","t":"支出","c":"车","a":54.74,"n":""},{"d":"2025-11-07","t":"支出","c":"餐饮","a":16.0,"n":""},{"d":"2025-11-07","t":"支出","c":"餐饮","a":13.0,"n":""},{"d":"2025-11-07","t":"支出","c":"交通","a":26.21,"n":""},{"d":"2025-11-07","t":"支出","c":"宠物","a":35.75,"n":""},{"d":"2025-11-08","t":"支出","c":"蔬菜","a":26.71,"n":""},{"d":"2025-11-08","t":"支出","c":"交通","a":15.29,"n":""},{"d":"2025-11-08","t":"支出","c":"快递","a":11.5,"n":""},{"d":"2025-11-08","t":"支出","c":"餐饮","a":45.65,"n":""},{"d":"2025-11-08","t":"支出","c":"餐饮","a":58.2,"n":""},{"d":"2025-11-08","t":"支出","c":"网络","a":12.0,"n":""},{"d":"2025-11-08","t":"支出","c":"日用","a":7.8,"n":""},{"d":"2025-11-09","t":"支出","c":"网络","a":25.0,"n":"腾讯"},{"d":"2025-11-09","t":"支出","c":"餐饮","a":6.0,"n":""},{"d":"2025-11-09","t":"支出","c":"交通","a":15.7,"n":""},{"d":"2025-11-09","t":"支出","c":"交通","a":2.4,"n":""},{"d":"2025-11-09","t":"支出","c":"交通","a":1.6,"n":""},{"d":"2025-11-09","t":"支出","c":"交通","a":7.0,"n":""},{"d":"2025-11-10","t":"支出","c":"交通","a":31.6,"n":""},{"d":"2025-11-10","t":"支出","c":"餐饮","a":25.0,"n":""},{"d":"2025-11-10","t":"支出","c":"快递","a":74.0,"n":""},{"d":"2025-11-10","t":"支出","c":"车","a":53.76,"n":""},{"d":"2025-11-10","t":"支出","c":"交通","a":14.8,"n":""},{"d":"2025-11-11","t":"支出","c":"日用","a":126.0,"n":""},{"d":"2025-11-11","t":"支出","c":"交通","a":32.1,"n":""},{"d":"2025-11-11","t":"支出","c":"住房","a":96.12,"n":"电费"},{"d":"2025-11-11","t":"支出","c":"餐饮","a":37.2,"n":""},{"d":"2025-11-11","t":"支出","c":"餐饮","a":16.0,"n":""},{"d":"2025-11-11","t":"支出","c":"蔬菜","a":2.03,"n":""},{"d":"2025-11-11","t":"支出","c":"交通","a":25.22,"n":""},{"d":"2025-11-12","t":"支出","c":"服饰","a":92.62,"n":""},{"d":"2025-11-12","t":"支出","c":"交通","a":29.9,"n":""},{"d":"2025-11-12","t":"支出","c":"娱乐","a":7.2,"n":""},{"d":"2025-11-12","t":"支出","c":"餐饮","a":34.3,"n":""},{"d":"2025-11-12","t":"支出","c":"餐饮","a":36.48,"n":""},{"d":"2025-11-12","t":"支出","c":"交通","a":25.68,"n":""},{"d":"2025-11-12","t":"支出","c":"运动","a":14.8,"n":""},{"d":"2025-11-13","t":"支出","c":"餐饮","a":43.5,"n":""},{"d":"2025-11-13","t":"支出","c":"日用","a":75.36,"n":""},{"d":"2025-11-13","t":"支出","c":"交通","a":31.4,"n":""},{"d":"2025-11-13","t":"支出","c":"旅行","a":447.9,"n":"澳门船票"},{"d":"2025-11-13","t":"支出","c":"数码","a":15.3,"n":""},{"d":"2025-11-13","t":"支出","c":"住房","a":194.86,"n":"物业管理费"},{"d":"2025-11-13","t":"支出","c":"餐饮","a":50.9,"n":""},{"d":"2025-11-13","t":"支出","c":"餐饮","a":23.42,"n":""},{"d":"2025-11-13","t":"支出","c":"餐饮","a":46.1,"n":""},{"d":"2025-11-13","t":"支出","c":"交通","a":35.03,"n":""},{"d":"2025-11-13","t":"支出","c":"日用","a":17.91,"n":""},{"d":"2025-11-13","t":"支出","c":"旅行","a":537.0,"n":"澳门船票"},{"d":"2025-11-14","t":"支出","c":"餐饮","a":12.8,"n":""},{"d":"2025-11-14","t":"支出","c":"餐饮","a":87.75,"n":""},{"d":"2025-11-14","t":"支出","c":"交通","a":33.02,"n":""},{"d":"2025-11-15","t":"收入","c":"礼金","a":520.0,"n":"fr爸妈的生日🧧"},{"d":"2025-11-15","t":"支出","c":"蔬菜","a":89.5,"n":""},{"d":"2025-11-15","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2025-11-15","t":"支出","c":"日用","a":10.9,"n":""},{"d":"2025-11-16","t":"支出","c":"交通","a":14.74,"n":""},{"d":"2025-11-16","t":"支出","c":"日用","a":39.0,"n":""},{"d":"2025-11-16","t":"支出","c":"餐饮","a":82.7,"n":""},{"d":"2025-11-16","t":"支出","c":"交通","a":12.3,"n":""},{"d":"2025-11-16","t":"支出","c":"蔬菜","a":9.19,"n":""},{"d":"2025-11-16","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2025-11-16","t":"支出","c":"餐饮","a":41.6,"n":""},{"d":"2025-11-16","t":"支出","c":"交通","a":15.7,"n":""},{"d":"2025-11-17","t":"支出","c":"餐饮","a":26.0,"n":""},{"d":"2025-11-17","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-11-17","t":"支出","c":"其他","a":368.0,"n":"串"},{"d":"2025-11-17","t":"支出","c":"餐饮","a":42.1,"n":""},{"d":"2025-11-17","t":"支出","c":"蔬菜","a":8.0,"n":""},{"d":"2025-11-17","t":"支出","c":"日用","a":29.03,"n":""},{"d":"2025-11-17","t":"支出","c":"餐饮","a":108.0,"n":""},{"d":"2025-11-18","t":"支出","c":"医疗","a":69.0,"n":""},{"d":"2025-11-18","t":"支出","c":"交通","a":23.6,"n":""},{"d":"2025-11-18","t":"支出","c":"餐饮","a":14.72,"n":""},{"d":"2025-11-18","t":"支出","c":"餐饮","a":191.0,"n":""},{"d":"2025-11-18","t":"支出","c":"蔬菜","a":13.9,"n":""},{"d":"2025-11-19","t":"支出","c":"服饰","a":94.64,"n":""},{"d":"2025-11-19","t":"支出","c":"运动","a":53.44,"n":""},{"d":"2025-11-19","t":"支出","c":"服饰","a":144.93,"n":""},{"d":"2025-11-19","t":"支出","c":"餐饮","a":4.0,"n":""},{"d":"2025-11-19","t":"支出","c":"交通","a":32.0,"n":""},{"d":"2025-11-19","t":"支出","c":"旅行","a":15.0,"n":"签注"},{"d":"2025-11-19","t":"支出","c":"餐饮","a":24.7,"n":""},{"d":"2025-11-19","t":"支出","c":"餐饮","a":16.0,"n":""},{"d":"2025-11-19","t":"支出","c":"日用","a":39.23,"n":"削笔"},{"d":"2025-11-20","t":"支出","c":"交通","a":26.22,"n":""},{"d":"2025-11-20","t":"支出","c":"餐饮","a":31.4,"n":""},{"d":"2025-11-20","t":"支出","c":"餐饮","a":43.3,"n":""},{"d":"2025-11-20","t":"支出","c":"餐饮","a":25.0,"n":""},{"d":"2025-11-20","t":"支出","c":"交通","a":32.41,"n":""},{"d":"2025-11-21","t":"支出","c":"餐饮","a":12.0,"n":""},{"d":"2025-11-21","t":"支出","c":"亲友","a":963.52,"n":"高铁"},{"d":"2025-11-21","t":"收入","c":"礼金","a":188.88,"n":"大妈妈"},{"d":"2025-11-21","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-11-21","t":"支出","c":"保险","a":1474.06,"n":"灵活就业"},{"d":"2025-11-21","t":"支出","c":"日用","a":346.0,"n":"美甲"},{"d":"2025-11-21","t":"支出","c":"旅行","a":270.0,"n":"澳门船票差价"},{"d":"2025-11-21","t":"支出","c":"亲友","a":50.0,"n":""},{"d":"2025-11-22","t":"支出","c":"服饰","a":89.9,"n":""},{"d":"2025-11-22","t":"支出","c":"餐饮","a":28.94,"n":""},{"d":"2025-11-22","t":"支出","c":"通讯","a":28.0,"n":""},{"d":"2025-11-22","t":"支出","c":"交通","a":26.2,"n":""},{"d":"2025-11-22","t":"支出","c":"餐饮","a":8.0,"n":""},{"d":"2025-11-22","t":"支出","c":"交通","a":5.33,"n":""},{"d":"2025-11-22","t":"支出","c":"餐饮","a":301.0,"n":""},{"d":"2025-11-22","t":"支出","c":"日用","a":237.0,"n":"lush"},{"d":"2025-11-22","t":"支出","c":"交通","a":18.0,"n":""},{"d":"2025-11-22","t":"支出","c":"餐饮","a":55.0,"n":""},{"d":"2025-11-22","t":"支出","c":"交通","a":17.99,"n":""},{"d":"2025-11-23","t":"支出","c":"蔬菜","a":144.58,"n":""},{"d":"2025-11-23","t":"支出","c":"数码","a":4.0,"n":""},{"d":"2025-11-23","t":"支出","c":"交通","a":16.54,"n":""},{"d":"2025-11-23","t":"支出","c":"交通","a":18.05,"n":""},{"d":"2025-11-23","t":"支出","c":"交通","a":20.0,"n":""},{"d":"2025-11-23","t":"支出","c":"交通","a":7.0,"n":""},{"d":"2025-11-24","t":"支出","c":"旅行","a":161.64,"n":""},{"d":"2025-11-24","t":"支出","c":"交通","a":19.0,"n":""},{"d":"2025-11-24","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2025-11-24","t":"支出","c":"旅行","a":150.0,"n":""},{"d":"2025-11-24","t":"支出","c":"餐饮","a":22.0,"n":""},{"d":"2025-11-24","t":"支出","c":"交通","a":4.5,"n":""},{"d":"2025-11-24","t":"支出","c":"快递","a":22.1,"n":""},{"d":"2025-11-24","t":"支出","c":"亲友","a":149.0,"n":""},{"d":"2025-11-24","t":"支出","c":"餐饮","a":65.0,"n":""},{"d":"2025-11-24","t":"支出","c":"日用","a":457.0,"n":""},{"d":"2025-11-24","t":"支出","c":"餐饮","a":22.5,"n":""},{"d":"2025-11-24","t":"支出","c":"餐饮","a":12.0,"n":""},{"d":"2025-11-24","t":"支出","c":"服饰","a":149.0,"n":"编织平安扣"},{"d":"2025-11-24","t":"支出","c":"服饰","a":118.43,"n":"内胆"},{"d":"2025-11-24","t":"支出","c":"日用","a":50.8,"n":"遮瑕"},{"d":"2025-11-24","t":"支出","c":"日用","a":26.22,"n":""},{"d":"2025-11-24","t":"支出","c":"娱乐","a":368.0,"n":"ktv"},{"d":"2025-11-25","t":"支出","c":"快递","a":18.0,"n":""},{"d":"2025-11-25","t":"收入","c":"礼金","a":2000.0,"n":"妈妈"},{"d":"2025-11-25","t":"支出","c":"交通","a":31.4,"n":""},{"d":"2025-11-25","t":"支出","c":"交通","a":25.0,"n":""},{"d":"2025-11-25","t":"支出","c":"交通","a":16.46,"n":""},{"d":"2025-11-25","t":"支出","c":"交通","a":24.6,"n":""},{"d":"2025-11-26","t":"支出","c":"服饰","a":45.14,"n":""},{"d":"2025-11-26","t":"支出","c":"服饰","a":43.1,"n":""},{"d":"2025-11-26","t":"支出","c":"交通","a":21.6,"n":""},{"d":"2025-11-26","t":"支出","c":"餐饮","a":38.0,"n":""},{"d":"2025-11-26","t":"支出","c":"餐饮","a":29.8,"n":""},{"d":"2025-11-26","t":"支出","c":"餐饮","a":21.88,"n":""},{"d":"2025-11-26","t":"支出","c":"服饰","a":235.02,"n":"im向牛仔衣"},{"d":"2025-11-27","t":"支出","c":"交通","a":28.3,"n":""},{"d":"2025-11-27","t":"支出","c":"餐饮","a":34.79,"n":""},{"d":"2025-11-27","t":"支出","c":"餐饮","a":22.8,"n":""},{"d":"2025-11-27","t":"支出","c":"服饰","a":561.92,"n":"大瓶"},{"d":"2025-11-28","t":"收入","c":"闲置","a":913.0,"n":"Celine墨镜"},{"d":"2025-11-28","t":"收入","c":"工资","a":26000.0,"n":""},{"d":"2025-11-28","t":"支出","c":"交通","a":26.78,"n":""},{"d":"2025-11-28","t":"支出","c":"餐饮","a":18.0,"n":""},{"d":"2025-11-28","t":"支出","c":"交通","a":17.1,"n":""},{"d":"2025-11-28","t":"支出","c":"交通","a":18.52,"n":""},{"d":"2025-11-29","t":"支出","c":"餐饮","a":108.9,"n":""},{"d":"2025-11-29","t":"支出","c":"餐饮","a":158.0,"n":""},{"d":"2025-11-30","t":"支出","c":"餐饮","a":52.31,"n":""},{"d":"2025-11-30","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-11-30","t":"支出","c":"通讯","a":100.0,"n":""},{"d":"2025-11-30","t":"支出","c":"餐饮","a":55.7,"n":""},{"d":"2025-12-01","t":"支出","c":"住房","a":5254.0,"n":""},{"d":"2025-12-01","t":"支出","c":"餐饮","a":19.8,"n":""},{"d":"2025-12-01","t":"支出","c":"交通","a":17.88,"n":""},{"d":"2025-12-01","t":"支出","c":"交通","a":17.42,"n":""},{"d":"2025-12-01","t":"支出","c":"餐饮","a":91.0,"n":""},{"d":"2025-12-01","t":"支出","c":"交通","a":17.52,"n":""},{"d":"2025-12-02","t":"支出","c":"交通","a":24.0,"n":""},{"d":"2025-12-02","t":"支出","c":"餐饮","a":120.9,"n":""},{"d":"2025-12-03","t":"支出","c":"亲友","a":588.0,"n":"烤炉"},{"d":"2025-12-03","t":"支出","c":"交通","a":31.0,"n":""},{"d":"2025-12-03","t":"支出","c":"旅行","a":1386.0,"n":"上海机票"},{"d":"2025-12-03","t":"支出","c":"宠物","a":35.76,"n":""},{"d":"2025-12-03","t":"支出","c":"蔬菜","a":51.68,"n":""},{"d":"2025-12-03","t":"支出","c":"礼物","a":169.0,"n":"毛衣"},{"d":"2025-12-04","t":"支出","c":"餐饮","a":24.2,"n":""},{"d":"2025-12-04","t":"支出","c":"日用","a":93.65,"n":""},{"d":"2025-12-05","t":"支出","c":"交通","a":4.0,"n":""},{"d":"2025-12-05","t":"支出","c":"住房","a":217.7,"n":"物业管理费"},{"d":"2025-12-05","t":"支出","c":"交通","a":34.9,"n":""},{"d":"2025-12-05","t":"支出","c":"娱乐","a":258.0,"n":""},{"d":"2025-12-06","t":"支出","c":"餐饮","a":26.56,"n":""},{"d":"2025-12-06","t":"支出","c":"快递","a":40.0,"n":""},{"d":"2025-12-07","t":"支出","c":"餐饮","a":87.0,"n":""},{"d":"2025-12-07","t":"支出","c":"交通","a":46.0,"n":""},{"d":"2025-12-07","t":"支出","c":"快递","a":11.44,"n":""},{"d":"2025-12-07","t":"支出","c":"蔬菜","a":103.6,"n":""},{"d":"2025-12-07","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-12-07","t":"支出","c":"蔬菜","a":106.99,"n":""},{"d":"2025-12-07","t":"支出","c":"居家","a":41.88,"n":""},{"d":"2025-12-07","t":"支出","c":"蔬菜","a":12.5,"n":""},{"d":"2025-12-08","t":"支出","c":"交通","a":31.0,"n":""},{"d":"2025-12-08","t":"支出","c":"餐饮","a":34.0,"n":""},{"d":"2025-12-08","t":"支出","c":"礼物","a":49.0,"n":""},{"d":"2025-12-08","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2025-12-08","t":"支出","c":"服饰","a":191.55,"n":"灰色外套"},{"d":"2025-12-08","t":"支出","c":"日用","a":18.8,"n":""},{"d":"2025-12-09","t":"支出","c":"餐饮","a":42.98,"n":""},{"d":"2025-12-09","t":"支出","c":"旅行","a":549.0,"n":"迪斯尼门票"},{"d":"2025-12-09","t":"支出","c":"交通","a":24.13,"n":""},{"d":"2025-12-09","t":"支出","c":"日用","a":70.6,"n":""},{"d":"2025-12-09","t":"支出","c":"餐饮","a":44.3,"n":""},{"d":"2025-12-09","t":"支出","c":"居家","a":131.65,"n":""},{"d":"2025-12-09","t":"支出","c":"交通","a":23.21,"n":""},{"d":"2025-12-09","t":"支出","c":"旅行","a":409.79,"n":"上海酒店"},{"d":"2025-12-09","t":"支出","c":"宠物","a":45.4,"n":""},{"d":"2025-12-10","t":"支出","c":"日用","a":79.9,"n":""},{"d":"2025-12-10","t":"支出","c":"餐饮","a":10.0,"n":""},{"d":"2025-12-10","t":"支出","c":"礼物","a":690.0,"n":"长袖"},{"d":"2025-12-10","t":"支出","c":"交通","a":32.55,"n":""},{"d":"2025-12-11","t":"支出","c":"旅行","a":1220.0,"n":"迪斯尼尊享卡"},{"d":"2025-12-11","t":"支出","c":"交通","a":32.0,"n":""},{"d":"2025-12-11","t":"支出","c":"车","a":50.0,"n":""},{"d":"2025-12-11","t":"支出","c":"住房","a":45.08,"n":""},{"d":"2025-12-11","t":"支出","c":"蔬菜","a":73.27,"n":""},{"d":"2025-12-11","t":"支出","c":"交通","a":28.55,"n":""},{"d":"2025-12-11","t":"支出","c":"居家","a":124.0,"n":"桌子"},{"d":"2025-12-12","t":"支出","c":"餐饮","a":43.7,"n":""},{"d":"2025-12-12","t":"支出","c":"日用","a":76.13,"n":""},{"d":"2025-12-12","t":"支出","c":"日用","a":25.01,"n":""},{"d":"2025-12-12","t":"支出","c":"服饰","a":200.87,"n":"米白毛衣"},{"d":"2025-12-12","t":"支出","c":"交通","a":22.35,"n":""},{"d":"2025-12-13","t":"支出","c":"餐饮","a":25.0,"n":""},{"d":"2025-12-13","t":"支出","c":"服饰","a":130.99,"n":""},{"d":"2025-12-13","t":"支出","c":"服饰","a":199.9,"n":"sinsin"},{"d":"2025-12-14","t":"支出","c":"餐饮","a":39.01,"n":""},{"d":"2025-12-14","t":"支出","c":"保险","a":212.8,"n":"百万医疗"},{"d":"2025-12-14","t":"支出","c":"保险","a":238.6,"n":"百万重疾"},{"d":"2025-12-15","t":"支出","c":"住房","a":40.0,"n":"灯"},{"d":"2025-12-15","t":"支出","c":"日用","a":2.28,"n":""},{"d":"2025-12-15","t":"支出","c":"蔬菜","a":95.4,"n":""},{"d":"2025-12-16","t":"支出","c":"交通","a":24.2,"n":""},{"d":"2025-12-16","t":"支出","c":"办公","a":52.0,"n":""},{"d":"2025-12-16","t":"支出","c":"办公","a":30.0,"n":""},{"d":"2025-12-16","t":"支出","c":"交通","a":23.28,"n":""},{"d":"2025-12-16","t":"支出","c":"餐饮","a":40.8,"n":""},{"d":"2025-12-16","t":"支出","c":"餐饮","a":18.2,"n":""},{"d":"2025-12-16","t":"支出","c":"交通","a":19.5,"n":""},{"d":"2025-12-16","t":"支出","c":"礼物","a":19.75,"n":""},{"d":"2025-12-16","t":"支出","c":"礼物","a":3.01,"n":""},{"d":"2025-12-16","t":"支出","c":"旅行","a":784.62,"n":"厦门酒店"},{"d":"2025-12-17","t":"支出","c":"交通","a":23.2,"n":""},{"d":"2025-12-17","t":"支出","c":"餐饮","a":9.9,"n":""},{"d":"2025-12-17","t":"支出","c":"餐饮","a":62.5,"n":""},{"d":"2025-12-17","t":"支出","c":"餐饮","a":28.1,"n":""},{"d":"2025-12-17","t":"支出","c":"交通","a":31.97,"n":""},{"d":"2025-12-17","t":"支出","c":"会员","a":9.0,"n":""},{"d":"2025-12-18","t":"支出","c":"礼金","a":8.8,"n":""},{"d":"2025-12-18","t":"支出","c":"交通","a":26.1,"n":""},{"d":"2025-12-18","t":"支出","c":"学习","a":36.8,"n":""},{"d":"2025-12-18","t":"支出","c":"医疗","a":57.5,"n":""},{"d":"2025-12-18","t":"支出","c":"交通","a":19.9,"n":""},{"d":"2025-12-19","t":"支出","c":"交通","a":61.61,"n":""},{"d":"2025-12-19","t":"支出","c":"餐饮","a":19.5,"n":""},{"d":"2025-12-19","t":"支出","c":"餐饮","a":60.78,"n":""},{"d":"2025-12-19","t":"支出","c":"车","a":59.24,"n":""},{"d":"2025-12-19","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2025-12-21","t":"支出","c":"交通","a":58.69,"n":""},{"d":"2025-12-21","t":"支出","c":"餐饮","a":63.0,"n":""},{"d":"2025-12-21","t":"支出","c":"礼物","a":219.9,"n":""},{"d":"2025-12-21","t":"支出","c":"交通","a":60.23,"n":""},{"d":"2025-12-21","t":"支出","c":"交通","a":17.45,"n":""},{"d":"2025-12-21","t":"支出","c":"交通","a":18.02,"n":""},{"d":"2025-12-21","t":"支出","c":"旅行","a":109.5,"n":"奇奇蒂蒂"},{"d":"2025-12-21","t":"支出","c":"旅行","a":375.0,"n":"吃饭"},{"d":"2025-12-21","t":"支出","c":"旅行","a":77.0,"n":"出行"},{"d":"2025-12-21","t":"支出","c":"旅行","a":50.0,"n":"租头饰"},{"d":"2025-12-22","t":"支出","c":"交通","a":19.9,"n":""},{"d":"2025-12-22","t":"支出","c":"快递","a":14.9,"n":""},{"d":"2025-12-22","t":"支出","c":"餐饮","a":250.15,"n":"蛋黄酥"},{"d":"2025-12-22","t":"支出","c":"居家","a":392.0,"n":"微波炉"},{"d":"2025-12-22","t":"支出","c":"蔬菜","a":15.6,"n":""},{"d":"2025-12-22","t":"支出","c":"保险","a":1474.06,"n":"灵活就业"},{"d":"2025-12-22","t":"支出","c":"餐饮","a":91.5,"n":""},{"d":"2025-12-22","t":"支出","c":"亲友","a":205.0,"n":"姥姥衣服"},{"d":"2025-12-23","t":"支出","c":"交通","a":29.6,"n":""},{"d":"2025-12-23","t":"支出","c":"日用","a":46.0,"n":""},{"d":"2025-12-23","t":"支出","c":"日用","a":406.74,"n":"面膜"},{"d":"2025-12-23","t":"支出","c":"餐饮","a":19.4,"n":""},{"d":"2025-12-23","t":"支出","c":"居家","a":54.76,"n":""},{"d":"2025-12-23","t":"支出","c":"居家","a":35.3,"n":""},{"d":"2025-12-23","t":"支出","c":"居家","a":59.9,"n":""},{"d":"2025-12-23","t":"支出","c":"亲友","a":144.0,"n":"垃圾桶"},{"d":"2025-12-23","t":"支出","c":"蔬菜","a":43.4,"n":""},{"d":"2025-12-23","t":"支出","c":"日用","a":245.0,"n":"洁面"},{"d":"2025-12-24","t":"支出","c":"交通","a":22.9,"n":""},{"d":"2025-12-24","t":"支出","c":"餐饮","a":19.3,"n":""},{"d":"2025-12-24","t":"支出","c":"礼物","a":359.0,"n":"二狗儿子"},{"d":"2025-12-24","t":"支出","c":"餐饮","a":38.0,"n":""},{"d":"2025-12-24","t":"支出","c":"娱乐","a":79.0,"n":""},{"d":"2025-12-24","t":"支出","c":"医疗","a":10.3,"n":""},{"d":"2025-12-24","t":"支出","c":"娱乐","a":50.0,"n":""},{"d":"2025-12-24","t":"支出","c":"服饰","a":4800.0,"n":"celine"},{"d":"2025-12-24","t":"支出","c":"快递","a":14.6,"n":""},{"d":"2025-12-25","t":"支出","c":"交通","a":19.0,"n":""},{"d":"2025-12-25","t":"支出","c":"蔬菜","a":3.0,"n":""},{"d":"2025-12-25","t":"支出","c":"交通","a":16.5,"n":""},{"d":"2025-12-25","t":"支出","c":"日用","a":15000.0,"n":"星和"},{"d":"2025-12-25","t":"支出","c":"餐饮","a":28.8,"n":""},{"d":"2025-12-25","t":"支出","c":"餐饮","a":43.6,"n":""},{"d":"2025-12-25","t":"支出","c":"交通","a":16.1,"n":""},{"d":"2025-12-25","t":"支出","c":"快递","a":7.8,"n":""},{"d":"2025-12-25","t":"支出","c":"快递","a":7.4,"n":""},{"d":"2025-12-25","t":"支出","c":"餐饮","a":35.7,"n":""},{"d":"2025-12-25","t":"支出","c":"旅行","a":145.0,"n":"演唱会去"},{"d":"2025-12-26","t":"支出","c":"车","a":60.4,"n":""},{"d":"2025-12-26","t":"支出","c":"交通","a":17.6,"n":""},{"d":"2025-12-26","t":"支出","c":"餐饮","a":39.9,"n":""},{"d":"2025-12-26","t":"支出","c":"餐饮","a":17.0,"n":""},{"d":"2025-12-26","t":"支出","c":"医疗","a":27.2,"n":""},{"d":"2025-12-26","t":"支出","c":"交通","a":19.8,"n":""},{"d":"2025-12-26","t":"支出","c":"车","a":1666.66,"n":"车贷"},{"d":"2025-12-26","t":"支出","c":"日用","a":28.9,"n":""},{"d":"2025-12-27","t":"支出","c":"日用","a":66.0,"n":""},{"d":"2025-12-27","t":"支出","c":"居家","a":9.9,"n":""},{"d":"2025-12-27","t":"支出","c":"餐饮","a":29.45,"n":""},{"d":"2025-12-27","t":"支出","c":"餐饮","a":14.7,"n":""},{"d":"2025-12-27","t":"支出","c":"交通","a":42.5,"n":""},{"d":"2025-12-27","t":"支出","c":"快递","a":16.8,"n":""},{"d":"2025-12-28","t":"支出","c":"礼物","a":281.0,"n":"鞋"},{"d":"2025-12-28","t":"支出","c":"交通","a":17.2,"n":""},{"d":"2025-12-28","t":"支出","c":"交通","a":129.0,"n":"顺风车回"},{"d":"2025-12-28","t":"支出","c":"餐饮","a":36.0,"n":""},{"d":"2025-12-29","t":"支出","c":"餐饮","a":81.08,"n":""},{"d":"2025-12-29","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2025-12-29","t":"支出","c":"快递","a":11.5,"n":""},{"d":"2025-12-30","t":"支出","c":"餐饮","a":16.7,"n":""},{"d":"2025-12-30","t":"支出","c":"交通","a":21.01,"n":""},{"d":"2025-12-30","t":"支出","c":"医疗","a":23.1,"n":""},{"d":"2025-12-30","t":"支出","c":"餐饮","a":40.8,"n":""},{"d":"2025-12-30","t":"支出","c":"餐饮","a":209.0,"n":""},{"d":"2025-12-30","t":"支出","c":"交通","a":7.0,"n":""},{"d":"2025-12-30","t":"收入","c":"礼金","a":520.0,"n":"fr yx"},{"d":"2025-12-31","t":"支出","c":"快递","a":7.4,"n":""},{"d":"2025-12-31","t":"收入","c":"工资","a":26000.0,"n":""},{"d":"2025-12-31","t":"支出","c":"餐饮","a":46.5,"n":""},{"d":"2025-12-31","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2025-12-31","t":"支出","c":"居家","a":19.8,"n":""},{"d":"2025-12-31","t":"支出","c":"餐饮","a":15.0,"n":""},{"d":"2025-12-31","t":"支出","c":"餐饮","a":196.2,"n":""},{"d":"2026-01-01","t":"支出","c":"住房","a":5254.0,"n":""},{"d":"2026-01-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2026-01-01","t":"支出","c":"日用","a":42.8,"n":""},{"d":"2026-01-01","t":"支出","c":"餐饮","a":79.0,"n":""},{"d":"2026-01-01","t":"支出","c":"交通","a":24.0,"n":""},{"d":"2026-01-01","t":"支出","c":"餐饮","a":10.9,"n":""},{"d":"2026-01-01","t":"支出","c":"交通","a":23.1,"n":""},{"d":"2026-01-01","t":"支出","c":"日用","a":44.7,"n":""},{"d":"2026-01-01","t":"支出","c":"交通","a":30.0,"n":""},{"d":"2026-01-01","t":"支出","c":"餐饮","a":39.8,"n":""},{"d":"2026-01-01","t":"支出","c":"交通","a":20.2,"n":""},{"d":"2026-01-01","t":"支出","c":"交通","a":26.1,"n":""},{"d":"2026-01-01","t":"支出","c":"亲友","a":2066.48,"n":"净水器"},{"d":"2026-01-02","t":"支出","c":"亲友","a":36.8,"n":"台历"},{"d":"2026-01-02","t":"支出","c":"餐饮","a":30.0,"n":""},{"d":"2026-01-02","t":"支出","c":"车","a":50.0,"n":""},{"d":"2026-01-02","t":"支出","c":"交通","a":26.6,"n":""},{"d":"2026-01-02","t":"支出","c":"餐饮","a":14.0,"n":""},{"d":"2026-01-02","t":"支出","c":"餐饮","a":24.0,"n":""},{"d":"2026-01-02","t":"支出","c":"日用","a":25.72,"n":""},{"d":"2026-01-02","t":"支出","c":"日用","a":49.9,"n":""},{"d":"2026-01-03","t":"支出","c":"宠物","a":35.75,"n":""},{"d":"2026-01-03","t":"收入","c":"闲置","a":309.96,"n":""},{"d":"2026-01-03","t":"支出","c":"快递","a":15.5,"n":""},{"d":"2026-01-03","t":"支出","c":"餐饮","a":17.8,"n":""},{"d":"2026-01-03","t":"支出","c":"日用","a":110.0,"n":"发套"},{"d":"2026-01-04","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2026-01-04","t":"支出","c":"餐饮","a":26.7,"n":""},{"d":"2026-01-04","t":"支出","c":"餐饮","a":23.7,"n":""},{"d":"2026-01-04","t":"支出","c":"亲友","a":503.0,"n":"架子"},{"d":"2026-01-04","t":"支出","c":"旅行","a":316.5,"n":"高铁票"},{"d":"2026-01-04","t":"支出","c":"礼金","a":1000.0,"n":"何万家婚礼"},{"d":"2026-01-04","t":"支出","c":"旅行","a":364.5,"n":"高铁票"},{"d":"2026-01-05","t":"支出","c":"餐饮","a":13.8,"n":""},{"d":"2026-01-05","t":"支出","c":"娱乐","a":60.6,"n":""},{"d":"2026-01-05","t":"支出","c":"娱乐","a":99.0,"n":"收纳包"},{"d":"2026-01-05","t":"支出","c":"娱乐","a":19.99,"n":""},{"d":"2026-01-05","t":"支出","c":"娱乐","a":42.5,"n":""},{"d":"2026-01-05","t":"支出","c":"餐饮","a":11.5,"n":""},{"d":"2026-01-05","t":"支出","c":"蔬菜","a":19.27,"n":""},{"d":"2026-01-05","t":"支出","c":"学习","a":7.4,"n":""},{"d":"2026-01-05","t":"支出","c":"餐饮","a":22.27,"n":""},{"d":"2026-01-06","t":"支出","c":"办公","a":11.76,"n":""},{"d":"2026-01-06","t":"支出","c":"交通","a":30.5,"n":""},{"d":"2026-01-06","t":"支出","c":"餐饮","a":20.8,"n":""},{"d":"2026-01-06","t":"支出","c":"日用","a":200.0,"n":"染头发定金"},{"d":"2026-01-06","t":"支出","c":"医疗","a":239.09,"n":"保健品"},{"d":"2026-01-06","t":"支出","c":"服饰","a":26.3,"n":""},{"d":"2026-01-07","t":"支出","c":"日用","a":70.0,"n":"美瞳"},{"d":"2026-01-07","t":"支出","c":"交通","a":23.69,"n":""},{"d":"2026-01-07","t":"支出","c":"餐饮","a":28.9,"n":""},{"d":"2026-01-07","t":"支出","c":"礼物","a":80.61,"n":""},{"d":"2026-01-07","t":"支出","c":"蔬菜","a":7.9,"n":""},{"d":"2026-01-07","t":"支出","c":"蔬菜","a":7.0,"n":""},{"d":"2026-01-07","t":"支出","c":"蔬菜","a":4.91,"n":""},{"d":"2026-01-07","t":"支出","c":"蔬菜","a":5.0,"n":""},{"d":"2026-01-07","t":"支出","c":"居家","a":231.48,"n":"电热毯"},{"d":"2026-01-08","t":"支出","c":"礼物","a":28.6,"n":"水果"},{"d":"2026-01-08","t":"支出","c":"交通","a":25.23,"n":""},{"d":"2026-01-08","t":"支出","c":"餐饮","a":39.4,"n":""},{"d":"2026-01-08","t":"支出","c":"服饰","a":59.98,"n":""},{"d":"2026-01-08","t":"支出","c":"车","a":1666.66,"n":"车贷"},{"d":"2026-01-08","t":"支出","c":"交通","a":22.8,"n":""},{"d":"2026-01-08","t":"支出","c":"餐饮","a":37.9,"n":""},{"d":"2026-01-08","t":"支出","c":"交通","a":21.82,"n":""},{"d":"2026-01-08","t":"支出","c":"服饰","a":499.0,"n":"拉夫开衫"},{"d":"2026-01-09","t":"支出","c":"数码","a":75.0,"n":""},{"d":"2026-01-09","t":"支出","c":"日用","a":29.6,"n":""},{"d":"2026-01-09","t":"支出","c":"交通","a":22.6,"n":""},{"d":"2026-01-09","t":"支出","c":"运动","a":145.0,"n":"按摩"},{"d":"2026-01-09","t":"支出","c":"餐饮","a":32.0,"n":""},{"d":"2026-01-09","t":"支出","c":"娱乐","a":79.0,"n":""},{"d":"2026-01-09","t":"支出","c":"娱乐","a":79.0,"n":""},{"d":"2026-01-09","t":"支出","c":"餐饮","a":50.0,"n":""},{"d":"2026-01-09","t":"支出","c":"交通","a":16.6,"n":""},{"d":"2026-01-09","t":"支出","c":"医疗","a":24.1,"n":""},{"d":"2026-01-10","t":"支出","c":"蔬菜","a":76.6,"n":""},{"d":"2026-01-10","t":"支出","c":"网络","a":25.0,"n":"腾讯"},{"d":"2026-01-10","t":"支出","c":"餐饮","a":19.0,"n":""},{"d":"2026-01-10","t":"支出","c":"数码","a":124.1,"n":""},{"d":"2026-01-10","t":"支出","c":"车","a":50.0,"n":""},{"d":"2026-01-10","t":"支出","c":"交通","a":16.9,"n":""},{"d":"2026-01-10","t":"支出","c":"娱乐","a":15.0,"n":""},{"d":"2026-01-10","t":"支出","c":"餐饮","a":24.3,"n":""},{"d":"2026-01-10","t":"支出","c":"餐饮","a":27.88,"n":""},{"d":"2026-01-10","t":"支出","c":"餐饮","a":40.2,"n":""},{"d":"2026-01-11","t":"支出","c":"医疗","a":24.09,"n":""},{"d":"2026-01-11","t":"支出","c":"医疗","a":3.5,"n":""},{"d":"2026-01-11","t":"收入","c":"闲置","a":485.4,"n":"lulu双肩"},{"d":"2026-01-11","t":"支出","c":"餐饮","a":27.1,"n":""},{"d":"2026-01-11","t":"支出","c":"餐饮","a":49.4,"n":""},{"d":"2026-01-11","t":"支出","c":"住房","a":42.42,"n":""},{"d":"2026-01-11","t":"支出","c":"蔬菜","a":73.2,"n":""},{"d":"2026-01-11","t":"支出","c":"医疗","a":20.3,"n":""},{"d":"2026-01-12","t":"支出","c":"交通","a":33.1,"n":""},{"d":"2026-01-12","t":"支出","c":"交通","a":14.57,"n":""},{"d":"2026-01-12","t":"支出","c":"医疗","a":108.0,"n":""},{"d":"2026-01-12","t":"支出","c":"餐饮","a":34.0,"n":""},{"d":"2026-01-12","t":"支出","c":"娱乐","a":53.43,"n":""},{"d":"2026-01-12","t":"支出","c":"交通","a":70.48,"n":""},{"d":"2026-01-13","t":"支出","c":"亲友","a":44.5,"n":""},{"d":"2026-01-13","t":"支出","c":"居家","a":143.9,"n":""},{"d":"2026-01-13","t":"支出","c":"亲友","a":405.86,"n":""},{"d":"2026-01-13","t":"支出","c":"医疗","a":59.0,"n":""},{"d":"2026-01-13","t":"支出","c":"医疗","a":87.9,"n":""},{"d":"2026-01-13","t":"支出","c":"数码","a":26.12,"n":""},{"d":"2026-01-13","t":"收入","c":"闲置","a":220.0,"n":"ks"},{"d":"2026-01-13","t":"支出","c":"居家","a":19.9,"n":""},{"d":"2026-01-13","t":"支出","c":"宠物","a":118.11,"n":"衣服"},{"d":"2026-01-14","t":"支出","c":"日用","a":74.91,"n":""},{"d":"2026-01-14","t":"支出","c":"餐饮","a":25.28,"n":""},{"d":"2026-01-14","t":"支出","c":"日用","a":167.09,"n":""},{"d":"2026-01-14","t":"支出","c":"亲友","a":59.09,"n":"插座"},{"d":"2026-01-14","t":"支出","c":"亲友","a":4.93,"n":""},{"d":"2026-01-14","t":"支出","c":"餐饮","a":23.2,"n":""},{"d":"2026-01-14","t":"支出","c":"居家","a":5.22,"n":""},{"d":"2026-01-14","t":"支出","c":"亲友","a":1200.0,"n":"吹风机"},{"d":"2026-01-14","t":"支出","c":"医疗","a":23.8,"n":""},{"d":"2026-01-15","t":"支出","c":"服饰","a":14500.0,"n":"goyard hobo mini"},{"d":"2026-01-15","t":"支出","c":"餐饮","a":18.0,"n":""},{"d":"2026-01-15","t":"支出","c":"娱乐","a":990.0,"n":"蔡依林"},{"d":"2026-01-15","t":"支出","c":"宠物","a":160.0,"n":""},{"d":"2026-01-15","t":"支出","c":"餐饮","a":42.0,"n":""},{"d":"2026-01-15","t":"支出","c":"住房","a":216.84,"n":"物业管理费"},{"d":"2026-01-15","t":"支出","c":"日用","a":280.0,"n":"染发"},{"d":"2026-01-16","t":"支出","c":"日用","a":26.1,"n":""},{"d":"2026-01-16","t":"支出","c":"医疗","a":29.9,"n":""},{"d":"2026-01-16","t":"支出","c":"餐饮","a":32.0,"n":""},{"d":"2026-01-16","t":"支出","c":"居家","a":253.8,"n":""},{"d":"2026-01-16","t":"支出","c":"餐饮","a":29.9,"n":""},{"d":"2026-01-17","t":"支出","c":"餐饮","a":52.4,"n":""},{"d":"2026-01-17","t":"支出","c":"亲友","a":28.9,"n":""},{"d":"2026-01-17","t":"支出","c":"日用","a":69.0,"n":""},{"d":"2026-01-18","t":"支出","c":"车","a":63.12,"n":""},{"d":"2026-01-18","t":"支出","c":"餐饮","a":25.2,"n":""},{"d":"2026-01-18","t":"支出","c":"餐饮","a":9.0,"n":""},{"d":"2026-01-18","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2026-01-19","t":"支出","c":"车","a":50.0,"n":""},{"d":"2026-01-19","t":"支出","c":"餐饮","a":23.3,"n":""},{"d":"2026-01-19","t":"支出","c":"居家","a":35.1,"n":""},{"d":"2026-01-20","t":"支出","c":"交通","a":33.7,"n":""},{"d":"2026-01-20","t":"支出","c":"餐饮","a":24.8,"n":""},{"d":"2026-01-20","t":"支出","c":"餐饮","a":59.0,"n":""},{"d":"2026-01-20","t":"支出","c":"居家","a":5.5,"n":""},{"d":"2026-01-20","t":"支出","c":"服饰","a":153.3,"n":"内胆"},{"d":"2026-01-21","t":"支出","c":"餐饮","a":42.1,"n":""},{"d":"2026-01-21","t":"支出","c":"保险","a":1541.39,"n":"灵活就业"},{"d":"2026-01-21","t":"支出","c":"餐饮","a":18.32,"n":""},{"d":"2026-01-22","t":"支出","c":"日用","a":18.9,"n":""},{"d":"2026-01-22","t":"支出","c":"交通","a":27.0,"n":""},{"d":"2026-01-22","t":"支出","c":"居家","a":169.0,"n":""},{"d":"2026-01-22","t":"支出","c":"餐饮","a":37.3,"n":""},{"d":"2026-01-22","t":"支出","c":"医疗","a":49.9,"n":""},{"d":"2026-01-23","t":"支出","c":"交通","a":30.5,"n":""},{"d":"2026-01-23","t":"支出","c":"餐饮","a":103.8,"n":""},{"d":"2026-01-23","t":"支出","c":"餐饮","a":20.49,"n":""},{"d":"2026-01-23","t":"支出","c":"餐饮","a":16.8,"n":""},{"d":"2026-01-23","t":"支出","c":"日用","a":84.14,"n":""},{"d":"2026-01-23","t":"支出","c":"日用","a":94.0,"n":""},{"d":"2026-01-23","t":"支出","c":"日用","a":146.0,"n":""},{"d":"2026-01-24","t":"支出","c":"快递","a":15.2,"n":""},{"d":"2026-01-24","t":"支出","c":"车","a":50.0,"n":""},{"d":"2026-01-24","t":"支出","c":"亲友","a":27.3,"n":""},{"d":"2026-01-24","t":"支出","c":"日用","a":194.9,"n":""},{"d":"2026-01-24","t":"支出","c":"服饰","a":631.3,"n":"im向"},{"d":"2026-01-24","t":"支出","c":"交通","a":13.0,"n":""},{"d":"2026-01-25","t":"支出","c":"交通","a":13.7,"n":""},{"d":"2026-01-25","t":"支出","c":"餐饮","a":47.1,"n":""},{"d":"2026-01-25","t":"支出","c":"餐饮","a":30.3,"n":""},{"d":"2026-01-25","t":"支出","c":"交通","a":12.3,"n":""},{"d":"2026-01-25","t":"支出","c":"餐饮","a":26.08,"n":""},{"d":"2026-01-25","t":"支出","c":"蔬菜","a":40.68,"n":""},{"d":"2026-01-25","t":"支出","c":"日用","a":137.0,"n":""},{"d":"2026-01-25","t":"支出","c":"日用","a":8.74,"n":""},{"d":"2026-01-26","t":"收入","c":"闲置","a":185.63,"n":""},{"d":"2026-01-26","t":"支出","c":"交通","a":31.0,"n":""},{"d":"2026-01-26","t":"支出","c":"网络","a":1058.4,"n":"宽带"},{"d":"2026-01-27","t":"支出","c":"交通","a":35.9,"n":""},{"d":"2026-01-27","t":"支出","c":"餐饮","a":37.95,"n":""},{"d":"2026-01-27","t":"支出","c":"会员","a":5.0,"n":""},{"d":"2026-01-27","t":"支出","c":"学习","a":97.3,"n":""},{"d":"2026-01-27","t":"收入","c":"闲置","a":10.5,"n":"旧衣"},{"d":"2026-01-27","t":"支出","c":"亲友","a":99.9,"n":""},{"d":"2026-01-28","t":"支出","c":"礼物","a":608.6,"n":""},{"d":"2026-01-28","t":"支出","c":"交通","a":34.3,"n":""},{"d":"2026-01-29","t":"支出","c":"车","a":50.0,"n":""},{"d":"2026-01-29","t":"支出","c":"日用","a":28.8,"n":""},{"d":"2026-01-29","t":"支出","c":"餐饮","a":15.57,"n":""},{"d":"2026-01-29","t":"支出","c":"交通","a":14.92,"n":""},{"d":"2026-01-29","t":"支出","c":"餐饮","a":87.0,"n":""},{"d":"2026-01-29","t":"支出","c":"交通","a":19.6,"n":""},{"d":"2026-01-30","t":"收入","c":"工资","a":25400.0,"n":""},{"d":"2026-01-30","t":"支出","c":"交通","a":21.6,"n":""},{"d":"2026-01-30","t":"支出","c":"餐饮","a":37.0,"n":""},{"d":"2026-01-30","t":"支出","c":"宠物","a":115.0,"n":""},{"d":"2026-01-30","t":"支出","c":"宠物","a":34.9,"n":""},{"d":"2026-01-30","t":"支出","c":"餐饮","a":38.8,"n":""},{"d":"2026-01-30","t":"支出","c":"交通","a":33.72,"n":""},{"d":"2026-01-30","t":"支出","c":"日用","a":73.54,"n":"洗头发"},{"d":"2026-01-31","t":"支出","c":"餐饮","a":49.3,"n":""},{"d":"2026-01-31","t":"支出","c":"餐饮","a":95.01,"n":""},{"d":"2026-01-31","t":"支出","c":"快递","a":17.5,"n":""},{"d":"2026-02-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2026-02-01","t":"支出","c":"住房","a":5254.0,"n":""},{"d":"2026-02-01","t":"支出","c":"餐饮","a":6.5,"n":""},{"d":"2026-02-01","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2026-02-02","t":"支出","c":"交通","a":18.8,"n":""},{"d":"2026-02-02","t":"支出","c":"车","a":50.0,"n":""},{"d":"2026-02-03","t":"支出","c":"餐饮","a":19.82,"n":""},{"d":"2026-02-03","t":"支出","c":"交通","a":18.3,"n":""},{"d":"2026-02-03","t":"支出","c":"宠物","a":35.75,"n":""},{"d":"2026-02-03","t":"支出","c":"餐饮","a":33.2,"n":""},{"d":"2026-02-04","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2026-02-04","t":"支出","c":"餐饮","a":51.8,"n":""},{"d":"2026-02-04","t":"支出","c":"餐饮","a":23.5,"n":""},{"d":"2026-02-04","t":"支出","c":"蔬菜","a":51.0,"n":""},{"d":"2026-02-04","t":"支出","c":"餐饮","a":6.5,"n":""},{"d":"2026-02-04","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2026-02-04","t":"支出","c":"交通","a":22.4,"n":""},{"d":"2026-02-05","t":"支出","c":"餐饮","a":28.68,"n":""},{"d":"2026-02-05","t":"支出","c":"交通","a":22.5,"n":""},{"d":"2026-02-05","t":"支出","c":"交通","a":18.38,"n":""},{"d":"2026-02-05","t":"支出","c":"餐饮","a":33.6,"n":""},{"d":"2026-02-05","t":"支出","c":"交通","a":14.98,"n":""},{"d":"2026-02-07","t":"支出","c":"餐饮","a":13.6,"n":""},{"d":"2026-02-07","t":"支出","c":"宠物","a":171.08,"n":""},{"d":"2026-02-08","t":"支出","c":"餐饮","a":15.0,"n":""},{"d":"2026-02-08","t":"支出","c":"医疗","a":61.17,"n":""},{"d":"2026-02-08","t":"支出","c":"交通","a":30.1,"n":""},{"d":"2026-02-08","t":"支出","c":"医疗","a":154.87,"n":""},{"d":"2026-02-08","t":"支出","c":"交通","a":32.8,"n":""},{"d":"2026-02-08","t":"支出","c":"餐饮","a":32.5,"n":""},{"d":"2026-02-08","t":"支出","c":"餐饮","a":21.08,"n":""},{"d":"2026-02-08","t":"支出","c":"交通","a":50.03,"n":""},{"d":"2026-02-08","t":"支出","c":"医疗","a":24.12,"n":""},{"d":"2026-02-08","t":"支出","c":"数码","a":28.69,"n":"手机壳"},{"d":"2026-02-08","t":"支出","c":"学习","a":75.45,"n":""},{"d":"2026-02-08","t":"支出","c":"亲友","a":1592.55,"n":"扫地机器人（扣闲置收入"},{"d":"2026-02-09","t":"支出","c":"交通","a":18.9,"n":""},{"d":"2026-02-09","t":"支出","c":"旅行","a":21.5,"n":"退票费"},{"d":"2026-02-09","t":"支出","c":"运动","a":49.6,"n":""},{"d":"2026-02-09","t":"支出","c":"旅行","a":14.9,"n":""},{"d":"2026-02-09","t":"支出","c":"交通","a":26.97,"n":""},{"d":"2026-02-09","t":"支出","c":"交通","a":9.0,"n":""},{"d":"2026-02-09","t":"支出","c":"蔬菜","a":59.9,"n":""},{"d":"2026-02-09","t":"支出","c":"网络","a":304.0,"n":"vpn"},{"d":"2026-02-10","t":"支出","c":"餐饮","a":62.0,"n":""},{"d":"2026-02-10","t":"支出","c":"餐饮","a":24.78,"n":""},{"d":"2026-02-10","t":"支出","c":"餐饮","a":23.6,"n":""},{"d":"2026-02-10","t":"支出","c":"交通","a":16.54,"n":""},{"d":"2026-02-11","t":"支出","c":"餐饮","a":24.8,"n":""},{"d":"2026-02-11","t":"支出","c":"旅行","a":636.5,"n":"回衡阳"},{"d":"2026-02-11","t":"支出","c":"日用","a":28.22,"n":""},{"d":"2026-02-11","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2026-02-11","t":"支出","c":"餐饮","a":55.5,"n":""},{"d":"2026-02-12","t":"支出","c":"日用","a":46.57,"n":""},{"d":"2026-02-12","t":"支出","c":"医疗","a":21.0,"n":""},{"d":"2026-02-12","t":"支出","c":"餐饮","a":29.8,"n":""},{"d":"2026-02-12","t":"支出","c":"餐饮","a":109.0,"n":""},{"d":"2026-02-12","t":"支出","c":"日用","a":40.0,"n":""},{"d":"2026-02-13","t":"支出","c":"车","a":55.76,"n":""},{"d":"2026-02-13","t":"支出","c":"亲友","a":41.4,"n":""},{"d":"2026-02-13","t":"支出","c":"餐饮","a":116.0,"n":""},{"d":"2026-02-13","t":"支出","c":"住房","a":102.74,"n":"电费"},{"d":"2026-02-14","t":"支出","c":"餐饮","a":47.49,"n":""},{"d":"2026-02-14","t":"支出","c":"娱乐","a":106.26,"n":""},{"d":"2026-02-14","t":"支出","c":"交通","a":20.9,"n":""},{"d":"2026-02-14","t":"支出","c":"交通","a":30.9,"n":""},{"d":"2026-02-15","t":"支出","c":"餐饮","a":26.0,"n":""},{"d":"2026-02-15","t":"支出","c":"餐饮","a":23.3,"n":""},{"d":"2026-02-15","t":"支出","c":"医疗","a":25.7,"n":""},{"d":"2026-02-15","t":"支出","c":"餐饮","a":84.0,"n":""},{"d":"2026-02-15","t":"支出","c":"日用","a":90.0,"n":""},{"d":"2026-02-16","t":"支出","c":"礼金","a":500.0,"n":"爷爷"},{"d":"2026-02-16","t":"支出","c":"礼金","a":520.0,"n":"老公"},{"d":"2026-02-16","t":"支出","c":"礼金","a":400.0,"n":"爸妈"},{"d":"2026-02-17","t":"支出","c":"礼金","a":520.0,"n":"爸妈"},{"d":"2026-02-17","t":"支出","c":"餐饮","a":27.7,"n":""},{"d":"2026-02-17","t":"支出","c":"车","a":1666.66,"n":"车贷"},{"d":"2026-02-17","t":"支出","c":"礼物","a":108.0,"n":"杯子"},{"d":"2026-02-17","t":"支出","c":"宠物","a":56.05,"n":""},{"d":"2026-02-18","t":"支出","c":"餐饮","a":25.5,"n":""},{"d":"2026-02-18","t":"收入","c":"礼金","a":3937.88,"n":"新年红包"},{"d":"2026-02-19","t":"支出","c":"车","a":50.0,"n":""},{"d":"2026-02-19","t":"支出","c":"餐饮","a":34.0,"n":""},{"d":"2026-02-20","t":"支出","c":"礼物","a":15.8,"n":""},{"d":"2026-02-20","t":"支出","c":"餐饮","a":22.7,"n":""},{"d":"2026-02-20","t":"支出","c":"宠物","a":115.2,"n":""},{"d":"2026-02-20","t":"支出","c":"医疗","a":125.0,"n":"护腕"},{"d":"2026-02-20","t":"支出","c":"亲友","a":53.0,"n":"碗筷"},{"d":"2026-02-20","t":"支出","c":"餐饮","a":30.08,"n":""},{"d":"2026-02-20","t":"支出","c":"亲友","a":30.0,"n":""},{"d":"2026-02-20","t":"支出","c":"宠物","a":50.16,"n":""},{"d":"2026-02-21","t":"支出","c":"旅行","a":761.5,"n":"高铁票"},{"d":"2026-02-21","t":"支出","c":"餐饮","a":183.0,"n":""},{"d":"2026-02-21","t":"支出","c":"餐饮","a":22.7,"n":""},{"d":"2026-02-22","t":"支出","c":"交通","a":21.5,"n":""},{"d":"2026-02-22","t":"支出","c":"娱乐","a":113.76,"n":"游戏"},{"d":"2026-02-22","t":"支出","c":"亲友","a":52.9,"n":""},{"d":"2026-02-22","t":"支出","c":"餐饮","a":44.2,"n":""},{"d":"2026-02-22","t":"支出","c":"居家","a":35.17,"n":""},{"d":"2026-02-22","t":"支出","c":"快递","a":5.5,"n":""},{"d":"2026-02-22","t":"支出","c":"餐饮","a":47.5,"n":""},{"d":"2026-02-23","t":"支出","c":"餐饮","a":16.5,"n":""},{"d":"2026-02-23","t":"支出","c":"餐饮","a":16.0,"n":""},{"d":"2026-02-23","t":"支出","c":"网络","a":198.0,"n":"bilibili双年"},{"d":"2026-02-23","t":"支出","c":"蔬菜","a":50.19,"n":""},{"d":"2026-02-23","t":"支出","c":"餐饮","a":82.0,"n":""},{"d":"2026-02-23","t":"支出","c":"交通","a":17.75,"n":""},{"d":"2026-02-23","t":"支出","c":"交通","a":15.4,"n":""},{"d":"2026-02-24","t":"支出","c":"餐饮","a":3.0,"n":""},{"d":"2026-02-24","t":"支出","c":"交通","a":22.0,"n":""},{"d":"2026-02-24","t":"支出","c":"餐饮","a":45.0,"n":""},{"d":"2026-02-24","t":"支出","c":"餐饮","a":13.0,"n":""},{"d":"2026-02-24","t":"支出","c":"餐饮","a":58.4,"n":""},{"d":"2026-02-24","t":"收入","c":"礼金","a":100.0,"n":"开工红包"},{"d":"2026-02-25","t":"支出","c":"交通","a":18.48,"n":""},{"d":"2026-02-25","t":"支出","c":"快递","a":19.0,"n":""},{"d":"2026-02-25","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2026-02-25","t":"支出","c":"交通","a":16.0,"n":""},{"d":"2026-02-25","t":"支出","c":"医疗","a":500.0,"n":"根管"},{"d":"2026-02-25","t":"支出","c":"餐饮","a":24.08,"n":""},{"d":"2026-02-25","t":"支出","c":"餐饮","a":26.75,"n":""},{"d":"2026-02-25","t":"支出","c":"交通","a":14.46,"n":""},{"d":"2026-02-25","t":"支出","c":"居家","a":24.9,"n":""},{"d":"2026-02-25","t":"支出","c":"居家","a":49.0,"n":""},{"d":"2026-02-25","t":"支出","c":"蔬菜","a":40.67,"n":""},{"d":"2026-02-26","t":"支出","c":"保险","a":1541.39,"n":""},{"d":"2026-02-26","t":"支出","c":"娱乐","a":9.9,"n":""},{"d":"2026-02-26","t":"支出","c":"交通","a":23.73,"n":""},{"d":"2026-02-26","t":"支出","c":"餐饮","a":37.8,"n":""},{"d":"2026-02-26","t":"收入","c":"礼金","a":1000.0,"n":"fr爸爸"},{"d":"2026-02-26","t":"支出","c":"交通","a":50.0,"n":"地铁卡"},{"d":"2026-02-26","t":"支出","c":"餐饮","a":6.5,"n":""},{"d":"2026-02-26","t":"支出","c":"餐饮","a":30.39,"n":""},{"d":"2026-02-26","t":"支出","c":"日用","a":425.0,"n":"ct粉饼"},{"d":"2026-02-27","t":"支出","c":"餐饮","a":19.8,"n":""},{"d":"2026-02-27","t":"收入","c":"工资","a":25000.0,"n":""},{"d":"2026-02-27","t":"支出","c":"居家","a":24.9,"n":""},{"d":"2026-02-27","t":"支出","c":"餐饮","a":1.65,"n":""},{"d":"2026-02-27","t":"支出","c":"餐饮","a":332.0,"n":""},{"d":"2026-02-27","t":"支出","c":"交通","a":28.48,"n":""},{"d":"2026-02-27","t":"支出","c":"交通","a":19.6,"n":""},{"d":"2026-02-28","t":"支出","c":"亲友","a":76.95,"n":"父母保险"},{"d":"2026-02-28","t":"支出","c":"亲友","a":76.95,"n":"父母保险"},{"d":"2026-02-28","t":"支出","c":"餐饮","a":22.5,"n":""},{"d":"2026-02-28","t":"支出","c":"居家","a":13.48,"n":""},{"d":"2026-02-28","t":"支出","c":"餐饮","a":59.2,"n":""},{"d":"2026-02-28","t":"支出","c":"快递","a":8.12,"n":""},{"d":"2026-03-01","t":"支出","c":"住房","a":5254.0,"n":""},{"d":"2026-03-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2026-03-01","t":"收入","c":"礼金","a":2000.0,"n":"fr yx🏠"},{"d":"2026-03-01","t":"支出","c":"通讯","a":5.29,"n":""},{"d":"2026-03-01","t":"支出","c":"交通","a":13.5,"n":""},{"d":"2026-03-01","t":"支出","c":"医疗","a":300.0,"n":"根管"},{"d":"2026-03-01","t":"支出","c":"餐饮","a":96.0,"n":""},{"d":"2026-03-01","t":"支出","c":"交通","a":30.0,"n":""},{"d":"2026-03-02","t":"支出","c":"交通","a":28.3,"n":""},{"d":"2026-03-02","t":"支出","c":"餐饮","a":21.88,"n":""},{"d":"2026-03-02","t":"支出","c":"服饰","a":248.0,"n":"定制竹篮"},{"d":"2026-03-02","t":"支出","c":"交通","a":31.6,"n":""},{"d":"2026-03-02","t":"支出","c":"服饰","a":29.9,"n":""},{"d":"2026-03-03","t":"支出","c":"餐饮","a":21.8,"n":""},{"d":"2026-03-03","t":"支出","c":"交通","a":22.3,"n":""},{"d":"2026-03-03","t":"支出","c":"旅行","a":2747.0,"n":"曼谷机票"},{"d":"2026-03-03","t":"支出","c":"日用","a":168.0,"n":"防晒"},{"d":"2026-03-03","t":"支出","c":"宠物","a":35.75,"n":""},{"d":"2026-03-03","t":"支出","c":"娱乐","a":267.0,"n":"ktv"},{"d":"2026-03-03","t":"支出","c":"交通","a":16.0,"n":""},{"d":"2026-03-04","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2026-03-04","t":"支出","c":"餐饮","a":14.68,"n":""},{"d":"2026-03-04","t":"支出","c":"交通","a":28.9,"n":""},{"d":"2026-03-04","t":"支出","c":"交通","a":19.8,"n":""},{"d":"2026-03-04","t":"支出","c":"餐饮","a":24.5,"n":""},{"d":"2026-03-05","t":"支出","c":"交通","a":14.5,"n":""},{"d":"2026-03-05","t":"支出","c":"宠物","a":19.9,"n":""},{"d":"2026-03-05","t":"支出","c":"旅行","a":230.0,"n":"高铁票"},{"d":"2026-03-05","t":"支出","c":"旅行","a":230.0,"n":"高铁票"},{"d":"2026-03-05","t":"支出","c":"餐饮","a":27.08,"n":""},{"d":"2026-03-05","t":"支出","c":"交通","a":20.5,"n":""},{"d":"2026-03-05","t":"支出","c":"礼物","a":96.0,"n":"曲奇送人"},{"d":"2026-03-05","t":"支出","c":"娱乐","a":75.0,"n":"泡泡玛特"},{"d":"2026-03-06","t":"支出","c":"餐饮","a":8.0,"n":""},{"d":"2026-03-06","t":"支出","c":"交通","a":22.0,"n":""},{"d":"2026-03-06","t":"支出","c":"餐饮","a":89.75,"n":""},{"d":"2026-03-06","t":"支出","c":"居家","a":66.0,"n":"洗头发"},{"d":"2026-03-06","t":"支出","c":"餐饮","a":38.0,"n":""},{"d":"2026-03-06","t":"支出","c":"餐饮","a":43.6,"n":""},{"d":"2026-03-07","t":"支出","c":"服饰","a":18.7,"n":""},{"d":"2026-03-07","t":"支出","c":"交通","a":25.9,"n":""},{"d":"2026-03-07","t":"支出","c":"娱乐","a":412.0,"n":"ktv"},{"d":"2026-03-08","t":"支出","c":"日用","a":29.6,"n":""},{"d":"2026-03-08","t":"支出","c":"亲友","a":133.0,"n":"花"},{"d":"2026-03-08","t":"支出","c":"蔬菜","a":160.08,"n":""},{"d":"2026-03-08","t":"支出","c":"蔬菜","a":10.33,"n":""},{"d":"2026-03-08","t":"支出","c":"居家","a":19.31,"n":""},{"d":"2026-03-08","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2026-03-08","t":"支出","c":"交通","a":14.4,"n":""},{"d":"2026-03-09","t":"支出","c":"日用","a":12.8,"n":""},{"d":"2026-03-09","t":"支出","c":"居家","a":56.9,"n":""},{"d":"2026-03-09","t":"支出","c":"餐饮","a":54.57,"n":""},{"d":"2026-03-09","t":"支出","c":"医疗","a":25.01,"n":""},{"d":"2026-03-09","t":"支出","c":"会员","a":28.8,"n":"腾讯"},{"d":"2026-03-09","t":"支出","c":"医疗","a":138.0,"n":"反流垫"},{"d":"2026-03-10","t":"支出","c":"交通","a":21.1,"n":""},{"d":"2026-03-10","t":"支出","c":"餐饮","a":2.0,"n":""},{"d":"2026-03-10","t":"支出","c":"餐饮","a":19.9,"n":""},{"d":"2026-03-10","t":"支出","c":"餐饮","a":23.0,"n":""},{"d":"2026-03-11","t":"支出","c":"日用","a":106.93,"n":"美瞳"},{"d":"2026-03-11","t":"支出","c":"交通","a":69.9,"n":""},{"d":"2026-03-11","t":"支出","c":"医疗","a":30.61,"n":""},{"d":"2026-03-11","t":"支出","c":"餐饮","a":9.58,"n":""},{"d":"2026-03-11","t":"支出","c":"服饰","a":89.0,"n":""},{"d":"2026-03-11","t":"支出","c":"医疗","a":50.49,"n":""},{"d":"2026-03-11","t":"支出","c":"餐饮","a":16.4,"n":""},{"d":"2026-03-11","t":"支出","c":"交通","a":55.0,"n":""},{"d":"2026-03-11","t":"支出","c":"住房","a":49.72,"n":"电费"},{"d":"2026-03-11","t":"支出","c":"餐饮","a":19.8,"n":""},{"d":"2026-03-11","t":"支出","c":"服饰","a":80.1,"n":""},{"d":"2026-03-11","t":"支出","c":"礼物","a":165.0,"n":"速干t"},{"d":"2026-03-12","t":"支出","c":"餐饮","a":88.67,"n":""},{"d":"2026-03-12","t":"支出","c":"交通","a":22.7,"n":""},{"d":"2026-03-12","t":"支出","c":"医疗","a":880.0,"n":"牙冠+治疗"},{"d":"2026-03-12","t":"支出","c":"交通","a":14.19,"n":""},{"d":"2026-03-12","t":"支出","c":"餐饮","a":2.0,"n":""},{"d":"2026-03-12","t":"支出","c":"餐饮","a":71.0,"n":""},{"d":"2026-03-12","t":"支出","c":"餐饮","a":51.34,"n":""},{"d":"2026-03-12","t":"支出","c":"交通","a":17.88,"n":""},{"d":"2026-03-12","t":"支出","c":"礼物","a":128.92,"n":"杯子"},{"d":"2026-03-13","t":"支出","c":"餐饮","a":13.8,"n":""},{"d":"2026-03-13","t":"支出","c":"日用","a":126.0,"n":"剪头发"},{"d":"2026-03-13","t":"支出","c":"餐饮","a":26.8,"n":""},{"d":"2026-03-13","t":"收入","c":"闲置","a":62.0,"n":""},{"d":"2026-03-13","t":"支出","c":"餐饮","a":268.4,"n":""},{"d":"2026-03-13","t":"支出","c":"交通","a":17.7,"n":""},{"d":"2026-03-14","t":"支出","c":"餐饮","a":47.5,"n":""},{"d":"2026-03-14","t":"支出","c":"餐饮","a":24.0,"n":""},{"d":"2026-03-14","t":"支出","c":"礼物","a":84.49,"n":""},{"d":"2026-03-14","t":"支出","c":"交通","a":41.01,"n":""},{"d":"2026-03-16","t":"支出","c":"交通","a":23.0,"n":""},{"d":"2026-03-16","t":"支出","c":"餐饮","a":32.0,"n":""},{"d":"2026-03-16","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2026-03-16","t":"支出","c":"亲友","a":14.0,"n":""},{"d":"2026-03-17","t":"支出","c":"餐饮","a":12.9,"n":""},{"d":"2026-03-17","t":"支出","c":"日用","a":11.9,"n":""},{"d":"2026-03-17","t":"支出","c":"学习","a":124.0,"n":""},{"d":"2026-03-17","t":"支出","c":"交通","a":18.6,"n":""},{"d":"2026-03-17","t":"支出","c":"快递","a":41.9,"n":""},{"d":"2026-03-17","t":"支出","c":"数码","a":5.9,"n":""},{"d":"2026-03-17","t":"支出","c":"数码","a":96.3,"n":"OPPO耳机"},{"d":"2026-03-17","t":"支出","c":"数码","a":2828.0,"n":"flip7"},{"d":"2026-03-18","t":"支出","c":"数码","a":12.8,"n":""},{"d":"2026-03-18","t":"支出","c":"餐饮","a":2.0,"n":""},{"d":"2026-03-18","t":"支出","c":"交通","a":17.9,"n":""},{"d":"2026-03-18","t":"支出","c":"数码","a":24.99,"n":""},{"d":"2026-03-18","t":"支出","c":"餐饮","a":19.0,"n":""},{"d":"2026-03-18","t":"支出","c":"餐饮","a":26.0,"n":""},{"d":"2026-03-18","t":"支出","c":"餐饮","a":20.0,"n":""},{"d":"2026-03-18","t":"支出","c":"亲友","a":564.86,"n":"海参"},{"d":"2026-03-19","t":"支出","c":"餐饮","a":47.0,"n":""},{"d":"2026-03-19","t":"支出","c":"数码","a":59.8,"n":""},{"d":"2026-03-19","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2026-03-19","t":"支出","c":"亲友","a":200.0,"n":"伯伯生日"},{"d":"2026-03-19","t":"支出","c":"蔬菜","a":59.9,"n":""},{"d":"2026-03-20","t":"支出","c":"数码","a":39.9,"n":"hdmi"},{"d":"2026-03-20","t":"支出","c":"办公","a":28.9,"n":""},{"d":"2026-03-20","t":"支出","c":"餐饮","a":40.7,"n":""},{"d":"2026-03-20","t":"支出","c":"住房","a":422.69,"n":"物业管理费"},{"d":"2026-03-20","t":"支出","c":"交通","a":17.49,"n":""},{"d":"2026-03-20","t":"支出","c":"交通","a":15.42,"n":""},{"d":"2026-03-20","t":"支出","c":"餐饮","a":31.0,"n":""},{"d":"2026-03-20","t":"支出","c":"餐饮","a":23.5,"n":""},{"d":"2026-03-20","t":"支出","c":"数码","a":375.25,"n":"手机壳"},{"d":"2026-03-20","t":"支出","c":"居家","a":37.0,"n":""},{"d":"2026-03-20","t":"支出","c":"办公","a":148.0,"n":"Claude"},{"d":"2026-03-21","t":"支出","c":"快递","a":14.6,"n":""},{"d":"2026-03-21","t":"支出","c":"交通","a":37.8,"n":""},{"d":"2026-03-21","t":"支出","c":"餐饮","a":28.0,"n":""},{"d":"2026-03-21","t":"支出","c":"餐饮","a":10.0,"n":""},{"d":"2026-03-21","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2026-03-21","t":"支出","c":"网络","a":12.9,"n":""},{"d":"2026-03-22","t":"支出","c":"蔬菜","a":66.68,"n":""},{"d":"2026-03-22","t":"支出","c":"快递","a":5.0,"n":""},{"d":"2026-03-22","t":"支出","c":"餐饮","a":29.8,"n":""},{"d":"2026-03-22","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2026-03-23","t":"支出","c":"日用","a":72.5,"n":""},{"d":"2026-03-23","t":"支出","c":"亲友","a":26.5,"n":"电话卡"},{"d":"2026-03-23","t":"支出","c":"旅行","a":26.5,"n":"电话卡"},{"d":"2026-03-23","t":"支出","c":"餐饮","a":29.9,"n":""},{"d":"2026-03-23","t":"支出","c":"餐饮","a":55.5,"n":""},{"d":"2026-03-23","t":"支出","c":"旅行","a":173.0,"n":"衡阳酒店"},{"d":"2026-03-24","t":"支出","c":"餐饮","a":2.0,"n":""},{"d":"2026-03-24","t":"支出","c":"交通","a":26.11,"n":""},{"d":"2026-03-24","t":"支出","c":"餐饮","a":22.9,"n":""},{"d":"2026-03-24","t":"支出","c":"宠物","a":79.9,"n":""},{"d":"2026-03-24","t":"支出","c":"餐饮","a":100.0,"n":""},{"d":"2026-03-24","t":"支出","c":"娱乐","a":20.0,"n":""},{"d":"2026-03-24","t":"支出","c":"娱乐","a":39.2,"n":"游戏"},{"d":"2026-03-25","t":"支出","c":"娱乐","a":40.0,"n":"周杰伦专辑"},{"d":"2026-03-25","t":"支出","c":"餐饮","a":3.8,"n":""},{"d":"2026-03-25","t":"支出","c":"交通","a":18.5,"n":""},{"d":"2026-03-25","t":"支出","c":"保险","a":1541.39,"n":"灵活就业"},{"d":"2026-03-25","t":"支出","c":"车","a":1666.66,"n":"车贷"},{"d":"2026-03-25","t":"支出","c":"医疗","a":62.6,"n":"医生奶茶"},{"d":"2026-03-25","t":"支出","c":"交通","a":20.0,"n":""},{"d":"2026-03-25","t":"支出","c":"交通","a":16.92,"n":""},{"d":"2026-03-25","t":"支出","c":"餐饮","a":22.0,"n":""},{"d":"2026-03-25","t":"支出","c":"居家","a":255.4,"n":""},{"d":"2026-03-25","t":"支出","c":"亲友","a":6295.0,"n":"妈妈黄金葫芦"},{"d":"2026-03-25","t":"支出","c":"亲友","a":42.8,"n":""},{"d":"2026-03-26","t":"支出","c":"居家","a":50.6,"n":""},{"d":"2026-03-26","t":"支出","c":"通讯","a":10.0,"n":""},{"d":"2026-03-26","t":"支出","c":"交通","a":53.6,"n":""},{"d":"2026-03-26","t":"支出","c":"通讯","a":24.0,"n":""},{"d":"2026-03-26","t":"支出","c":"餐饮","a":140.0,"n":""},{"d":"2026-03-26","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2026-03-26","t":"支出","c":"交通","a":67.0,"n":""},{"d":"2026-03-26","t":"支出","c":"会员","a":12.0,"n":""},{"d":"2026-03-27","t":"支出","c":"餐饮","a":44.0,"n":""},{"d":"2026-03-27","t":"支出","c":"日用","a":655.64,"n":"隐形"},{"d":"2026-03-27","t":"支出","c":"餐饮","a":12.26,"n":""},{"d":"2026-03-27","t":"支出","c":"办公","a":44.0,"n":"修眼镜"},{"d":"2026-03-27","t":"支出","c":"日用","a":228.0,"n":"镜框"},{"d":"2026-03-28","t":"支出","c":"餐饮","a":40.4,"n":""},{"d":"2026-03-28","t":"支出","c":"快递","a":5.04,"n":""},{"d":"2026-03-28","t":"支出","c":"餐饮","a":21.58,"n":""},{"d":"2026-03-29","t":"支出","c":"餐饮","a":33.5,"n":""},{"d":"2026-03-29","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2026-03-29","t":"支出","c":"服饰","a":212.0,"n":"葡萄妈"},{"d":"2026-03-30","t":"支出","c":"交通","a":15.3,"n":""},{"d":"2026-03-30","t":"支出","c":"交通","a":27.7,"n":""},{"d":"2026-03-30","t":"收入","c":"工资","a":25140.0,"n":""},{"d":"2026-03-30","t":"支出","c":"餐饮","a":19.0,"n":""},{"d":"2026-03-30","t":"支出","c":"学习","a":457.8,"n":"眼镜"},{"d":"2026-03-30","t":"支出","c":"交通","a":22.5,"n":""},{"d":"2026-03-31","t":"支出","c":"通讯","a":29.5,"n":""},{"d":"2026-03-31","t":"支出","c":"交通","a":17.7,"n":""},{"d":"2026-03-31","t":"支出","c":"餐饮","a":18.0,"n":""},{"d":"2026-03-31","t":"支出","c":"餐饮","a":73.7,"n":""},{"d":"2026-04-01","t":"支出","c":"亲友","a":76.95,"n":"父母保险"},{"d":"2026-04-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2026-04-01","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2026-04-01","t":"支出","c":"交通","a":17.6,"n":""},{"d":"2026-04-01","t":"支出","c":"餐饮","a":25.7,"n":""},{"d":"2026-04-01","t":"支出","c":"亲友","a":76.95,"n":"父母保险"},{"d":"2026-04-01","t":"支出","c":"交通","a":29.37,"n":""},{"d":"2026-04-01","t":"支出","c":"住房","a":5254.0,"n":""},{"d":"2026-04-02","t":"支出","c":"餐饮","a":17.9,"n":""},{"d":"2026-04-02","t":"支出","c":"居家","a":40.0,"n":""},{"d":"2026-04-02","t":"支出","c":"餐饮","a":223.0,"n":""},{"d":"2026-04-03","t":"支出","c":"餐饮","a":23.9,"n":""},{"d":"2026-04-03","t":"支出","c":"快递","a":7.24,"n":""},{"d":"2026-04-03","t":"支出","c":"交通","a":42.0,"n":""},{"d":"2026-04-03","t":"支出","c":"餐饮","a":43.0,"n":""},{"d":"2026-04-03","t":"支出","c":"旅行","a":542.86,"n":""},{"d":"2026-04-03","t":"支出","c":"运动","a":102.8,"n":""},{"d":"2026-04-04","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2026-04-04","t":"支出","c":"旅行","a":61.04,"n":"晚饭"},{"d":"2026-04-04","t":"支出","c":"旅行","a":6.0,"n":"tutu"},{"d":"2026-04-04","t":"支出","c":"旅行","a":50.54,"n":"机场打车"},{"d":"2026-04-04","t":"支出","c":"礼物","a":817.16,"n":""},{"d":"2026-04-04","t":"支出","c":"亲友","a":517.3,"n":"爸爸衣服"},{"d":"2026-04-04","t":"支出","c":"旅行","a":110.85,"n":"香氛"},{"d":"2026-04-04","t":"支出","c":"旅行","a":451.78,"n":"good good"},{"d":"2026-04-04","t":"支出","c":"旅行","a":42.25,"n":"打车"},{"d":"2026-04-04","t":"支出","c":"旅行","a":37.15,"n":"朱拉隆功晚饭"},{"d":"2026-04-04","t":"支出","c":"旅行","a":30.71,"n":"打泡饭"},{"d":"2026-04-04","t":"支出","c":"旅行","a":4.22,"n":"门票"},{"d":"2026-04-04","t":"支出","c":"旅行","a":261.04,"n":"711"},{"d":"2026-04-05","t":"支出","c":"旅行","a":126.67,"n":"handcream"},{"d":"2026-04-05","t":"支出","c":"旅行","a":568.0,"n":"ppmt"},{"d":"2026-04-05","t":"支出","c":"旅行","a":1013.51,"n":"adidas"},{"d":"2026-04-05","t":"支出","c":"旅行","a":283.24,"n":"两套衣服"},{"d":"2026-04-05","t":"支出","c":"旅行","a":145.84,"n":"爸爸t"},{"d":"2026-04-05","t":"支出","c":"旅行","a":95.11,"n":"t"},{"d":"2026-04-05","t":"支出","c":"旅行","a":33.82,"n":""},{"d":"2026-04-05","t":"支出","c":"旅行","a":7.18,"n":""},{"d":"2026-04-05","t":"支出","c":"旅行","a":41.81,"n":"打抛"},{"d":"2026-04-05","t":"支出","c":"旅行","a":823.49,"n":"拉夫t"},{"d":"2026-04-06","t":"支出","c":"旅行","a":197.63,"n":""},{"d":"2026-04-06","t":"支出","c":"旅行","a":12.68,"n":""},{"d":"2026-04-06","t":"支出","c":"旅行","a":54.36,"n":"打车机场"},{"d":"2026-04-06","t":"支出","c":"交通","a":55.2,"n":""},{"d":"2026-04-06","t":"支出","c":"餐饮","a":36.4,"n":""},{"d":"2026-04-06","t":"支出","c":"餐饮","a":19.6,"n":""},{"d":"2026-04-06","t":"支出","c":"快递","a":13.64,"n":""},{"d":"2026-04-07","t":"支出","c":"蔬菜","a":93.48,"n":""},{"d":"2026-04-07","t":"支出","c":"餐饮","a":3.5,"n":""},{"d":"2026-04-08","t":"支出","c":"餐饮","a":21.8,"n":""},{"d":"2026-04-08","t":"支出","c":"交通","a":17.27,"n":""},{"d":"2026-04-09","t":"支出","c":"日用","a":136.75,"n":"美瞳"},{"d":"2026-04-09","t":"支出","c":"蔬菜","a":30.64,"n":""},{"d":"2026-04-09","t":"支出","c":"日用","a":10.7,"n":""},{"d":"2026-04-09","t":"支出","c":"交通","a":27.7,"n":""},{"d":"2026-04-09","t":"支出","c":"餐饮","a":40.6,"n":""},{"d":"2026-04-09","t":"支出","c":"日用","a":19.9,"n":""},{"d":"2026-04-09","t":"支出","c":"娱乐","a":29.9,"n":""},{"d":"2026-04-09","t":"支出","c":"运动","a":629.0,"n":"裤子"},{"d":"2026-04-09","t":"支出","c":"餐饮","a":37.0,"n":""},{"d":"2026-04-10","t":"支出","c":"餐饮","a":47.8,"n":""},{"d":"2026-04-10","t":"支出","c":"娱乐","a":49.9,"n":""},{"d":"2026-04-10","t":"支出","c":"交通","a":18.02,"n":""},{"d":"2026-04-10","t":"支出","c":"交通","a":12.5,"n":""},{"d":"2026-04-10","t":"支出","c":"交通","a":15.0,"n":""},{"d":"2026-04-11","t":"支出","c":"运动","a":650.0,"n":"lulu grove口袋"},{"d":"2026-04-11","t":"支出","c":"服饰","a":127.28,"n":"内裤"},{"d":"2026-04-11","t":"支出","c":"日用","a":188.0,"n":"面霜"},{"d":"2026-04-11","t":"支出","c":"服饰","a":199.8,"n":""},{"d":"2026-04-11","t":"支出","c":"蔬菜","a":51.69,"n":""},{"d":"2026-04-11","t":"支出","c":"餐饮","a":22.0,"n":""},{"d":"2026-04-11","t":"支出","c":"交通","a":5.0,"n":""},{"d":"2026-04-12","t":"支出","c":"日用","a":15.7,"n":""},{"d":"2026-04-12","t":"支出","c":"旅行","a":729.0,"n":"高铁票"},{"d":"2026-04-12","t":"支出","c":"旅行","a":683.0,"n":"高铁票"},{"d":"2026-04-13","t":"支出","c":"日用","a":203.4,"n":"面膜"},{"d":"2026-04-13","t":"支出","c":"医疗","a":29.02,"n":""},{"d":"2026-04-13","t":"支出","c":"居家","a":671.04,"n":""},{"d":"2026-04-13","t":"支出","c":"餐饮","a":125.0,"n":""},{"d":"2026-04-13","t":"支出","c":"交通","a":20.5,"n":""},{"d":"2026-04-14","t":"支出","c":"学习","a":43.6,"n":""},{"d":"2026-04-14","t":"支出","c":"交通","a":20.1,"n":""},{"d":"2026-04-14","t":"支出","c":"餐饮","a":11.0,"n":""},{"d":"2026-04-14","t":"支出","c":"餐饮","a":39.89,"n":""},{"d":"2026-04-14","t":"支出","c":"住房","a":48.39,"n":"电费"},{"d":"2026-04-14","t":"支出","c":"服饰","a":404.2,"n":"酸奶"},{"d":"2026-04-14","t":"支出","c":"日用","a":73.4,"n":"卫生巾"},{"d":"2026-04-14","t":"支出","c":"医疗","a":32.0,"n":""},{"d":"2026-04-15","t":"支出","c":"蔬菜","a":54.91,"n":""},{"d":"2026-04-15","t":"支出","c":"快递","a":8.0,"n":""},{"d":"2026-04-15","t":"支出","c":"亲友","a":39.6,"n":"护腕"},{"d":"2026-04-15","t":"支出","c":"服饰","a":86.1,"n":"大瓶"},{"d":"2026-04-15","t":"支出","c":"服饰","a":99.0,"n":""},{"d":"2026-04-15","t":"支出","c":"服饰","a":250.0,"n":"大叮"},{"d":"2026-04-16","t":"支出","c":"交通","a":27.7,"n":""},{"d":"2026-04-16","t":"支出","c":"餐饮","a":21.9,"n":""},{"d":"2026-04-16","t":"支出","c":"亲友","a":200.0,"n":"微信红包"},{"d":"2026-04-16","t":"支出","c":"餐饮","a":379.0,"n":""},{"d":"2026-04-16","t":"支出","c":"车","a":1666.66,"n":""},{"d":"2026-04-17","t":"支出","c":"服饰","a":480.0,"n":"lulu短裤"},{"d":"2026-04-17","t":"支出","c":"日用","a":258.83,"n":"tf"},{"d":"2026-04-17","t":"支出","c":"日用","a":33.16,"n":""},{"d":"2026-04-17","t":"支出","c":"交通","a":25.5,"n":""},{"d":"2026-04-17","t":"支出","c":"餐饮","a":26.8,"n":""},{"d":"2026-04-17","t":"支出","c":"交通","a":6.0,"n":""},{"d":"2026-04-17","t":"支出","c":"服饰","a":39.9,"n":"内衣"},{"d":"2026-04-18","t":"支出","c":"服饰","a":39.0,"n":""},{"d":"2026-04-18","t":"支出","c":"餐饮","a":22.88,"n":""},{"d":"2026-04-18","t":"支出","c":"餐饮","a":25.1,"n":""},{"d":"2026-04-18","t":"支出","c":"娱乐","a":79.2,"n":"杀戮尖塔"},{"d":"2026-04-18","t":"支出","c":"餐饮","a":258.65,"n":""},{"d":"2026-04-18","t":"支出","c":"交通","a":10.0,"n":""},{"d":"2026-04-19","t":"支出","c":"餐饮","a":59.4,"n":""},{"d":"2026-04-19","t":"支出","c":"餐饮","a":9.9,"n":""},{"d":"2026-04-19","t":"支出","c":"餐饮","a":3.0,"n":""},{"d":"2026-04-19","t":"支出","c":"餐饮","a":15.0,"n":""},{"d":"2026-04-19","t":"支出","c":"交通","a":8.0,"n":""},{"d":"2026-04-19","t":"支出","c":"宠物","a":113.0,"n":""},{"d":"2026-04-19","t":"支出","c":"服饰","a":285.0,"n":"小红书牛仔裤"},{"d":"2026-04-20","t":"支出","c":"宠物","a":49.9,"n":""},{"d":"2026-04-20","t":"支出","c":"日用","a":39.9,"n":""},{"d":"2026-04-20","t":"支出","c":"蔬菜","a":51.57,"n":""},{"d":"2026-04-20","t":"支出","c":"交通","a":13.4,"n":""},{"d":"2026-04-20","t":"支出","c":"宠物","a":88.0,"n":""},{"d":"2026-04-21","t":"支出","c":"交通","a":16.2,"n":""},{"d":"2026-04-21","t":"支出","c":"保险","a":1541.39,"n":"灵活就业"},{"d":"2026-04-21","t":"支出","c":"住房","a":205.85,"n":"物业管理费"},{"d":"2026-04-21","t":"支出","c":"餐饮","a":96.9,"n":""},{"d":"2026-04-21","t":"支出","c":"交通","a":21.8,"n":""},{"d":"2026-04-21","t":"支出","c":"亲友","a":188.88,"n":""},{"d":"2026-04-21","t":"支出","c":"服饰","a":143.83,"n":"首饰"},{"d":"2026-04-22","t":"支出","c":"交通","a":53.96,"n":""},{"d":"2026-04-22","t":"支出","c":"交通","a":22.5,"n":""},{"d":"2026-04-22","t":"支出","c":"餐饮","a":52.0,"n":""},{"d":"2026-04-22","t":"支出","c":"餐饮","a":72.0,"n":""},{"d":"2026-04-22","t":"支出","c":"交通","a":53.98,"n":""},{"d":"2026-04-22","t":"支出","c":"餐饮","a":120.0,"n":""},{"d":"2026-04-22","t":"支出","c":"医疗","a":60.0,"n":""},{"d":"2026-04-22","t":"支出","c":"通讯","a":50.0,"n":""},{"d":"2026-04-22","t":"支出","c":"日用","a":44.55,"n":""},{"d":"2026-04-22","t":"支出","c":"交通","a":13.6,"n":""},{"d":"2026-04-23","t":"支出","c":"交通","a":22.3,"n":""},{"d":"2026-04-23","t":"支出","c":"餐饮","a":22.8,"n":""},{"d":"2026-04-23","t":"支出","c":"办公","a":43.9,"n":""},{"d":"2026-04-23","t":"支出","c":"餐饮","a":36.0,"n":""},{"d":"2026-04-23","t":"支出","c":"办公","a":894.0,"n":"Claude"},{"d":"2026-04-24","t":"支出","c":"餐饮","a":20.8,"n":""},{"d":"2026-04-24","t":"支出","c":"交通","a":16.6,"n":""},{"d":"2026-04-24","t":"支出","c":"餐饮","a":42.68,"n":""},{"d":"2026-04-25","t":"支出","c":"餐饮","a":66.1,"n":""},{"d":"2026-04-25","t":"支出","c":"餐饮","a":35.45,"n":""},{"d":"2026-04-26","t":"支出","c":"餐饮","a":4.0,"n":""},{"d":"2026-04-26","t":"支出","c":"餐饮","a":27.0,"n":""},{"d":"2026-04-26","t":"支出","c":"餐饮","a":41.0,"n":""},{"d":"2026-04-26","t":"支出","c":"餐饮","a":20.0,"n":""},{"d":"2026-04-26","t":"支出","c":"交通","a":41.5,"n":""},{"d":"2026-04-27","t":"支出","c":"快递","a":8.0,"n":""},{"d":"2026-04-27","t":"支出","c":"蔬菜","a":35.76,"n":""},{"d":"2026-04-27","t":"支出","c":"餐饮","a":133.4,"n":""},{"d":"2026-04-28","t":"支出","c":"交通","a":25.2,"n":""},{"d":"2026-04-28","t":"支出","c":"办公","a":198.55,"n":"tagi电脑包"},{"d":"2026-04-28","t":"支出","c":"服饰","a":143.74,"n":"内衣"},{"d":"2026-04-28","t":"支出","c":"服饰","a":67.77,"n":"内衣"},{"d":"2026-04-28","t":"支出","c":"宠物","a":13.87,"n":""},{"d":"2026-04-28","t":"支出","c":"交通","a":7.0,"n":""},{"d":"2026-04-28","t":"支出","c":"餐饮","a":16.89,"n":""}];
-// 历史看板 - 基于鲨鱼记账明细的可视化
-// 数据来源: src/data/records.json (从 CSV 转换)
-(function () {
-const fmtCNY = (n) => '¥' + Math.round(n).toLocaleString('en-US');
-
-// 类别配色（pastel tag），按类别名稳定哈希
-const TAG_CLASSES = ['tag-mint','tag-pink','tag-blue','tag-purple','tag-rose','tag-yellow','tag-orange','tag-gray'];
-function tagFor(name) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0x7fffffff;
-  return TAG_CLASSES[h % TAG_CLASSES.length];
-}
-
-// 当前选中的月份；空字符串 = 全年总览
-let selectedMonth = '';
-const fmtCNYShort = (n) => {
-  const v = Math.round(n);
-  const sign = v < 0 ? '-' : '';
-  const abs = Math.abs(v);
-  if (abs >= 10000) return sign + '¥' + (abs / 10000).toFixed(1) + 'w';
-  return sign + '¥' + abs.toLocaleString('en-US');
-};
-
-// ============================================
-// 数据聚合
-// ============================================
-
-function aggregate(records) {
-  const byMonth = {};      // ym -> { exp, inc, byCat: {cat: amt} }
-  const byCat = {};        // cat -> total
-  const months = new Set();
-  const cats = new Set();
-
-  for (const r of records) {
-    const ym = r.d.slice(0, 7);
-    months.add(ym);
-    if (!byMonth[ym]) byMonth[ym] = { exp: 0, inc: 0, byCat: {} };
-    if (r.t === '支出') {
-      byMonth[ym].exp += r.a;
-      byMonth[ym].byCat[r.c] = (byMonth[ym].byCat[r.c] || 0) + r.a;
-      byCat[r.c] = (byCat[r.c] || 0) + r.a;
-      cats.add(r.c);
-    } else {
-      byMonth[ym].inc += r.a;
-    }
-  }
-
-  return {
-    months: [...months].sort(),
-    cats: [...cats].sort((a, b) => byCat[b] - byCat[a]),
-    byMonth,
-    byCat
-  };
-}
-
-// ============================================
-// 摘要指标
-// ============================================
-
-function renderSummary(agg) {
-  const ms = agg.months;
-  const labels = {
-    full: ['总支出', '月均支出', '月均收入', '月均盈余'],
-    one:  ['当月支出', '对比月均', '当月收入', '当月盈余'],
-  };
-
-  const totalExp12 = ms.reduce((s, m) => s + agg.byMonth[m].exp, 0);
-  const totalInc12 = ms.reduce((s, m) => s + agg.byMonth[m].inc, 0);
-  const n = ms.length;
-  const avgExp = totalExp12 / n;
-  const avgInc = totalInc12 / n;
-
-  const setLabels = (arr) => arr.forEach((t, i) => {
-    document.getElementById('mLabel' + i).textContent = t;
-  });
-
-  if (!selectedMonth) {
-    // 全年总览
-    setLabels(labels.full);
-    const avgNet = avgInc - avgExp;
-    const rate = avgInc > 0 ? avgNet / avgInc : 0;
-
-    let maxM = ms[0], minM = ms[0];
-    for (const m of ms) {
-      if (agg.byMonth[m].exp > agg.byMonth[maxM].exp) maxM = m;
-      if (agg.byMonth[m].exp < agg.byMonth[minM].exp) minM = m;
-    }
-
-    document.getElementById('mTotalExp').textContent = fmtCNY(totalExp12);
-    document.getElementById('mMonths').textContent = `${n} 个月累计`;
-    document.getElementById('mAvgExp').textContent = fmtCNY(avgExp);
-    document.getElementById('mAvgExpSub').textContent =
-      `最高 ${maxM.slice(5)}月 ${fmtCNY(agg.byMonth[maxM].exp)} · 最低 ${minM.slice(5)}月 ${fmtCNY(agg.byMonth[minM].exp)}`;
-    document.getElementById('mAvgInc').textContent = fmtCNY(avgInc);
-    document.getElementById('mAvgIncSub').textContent = '含意外收入';
-
-    const netEl = document.getElementById('mAvgNet');
-    netEl.classList.remove('metric-pos', 'metric-neg');
-    netEl.textContent = (avgNet >= 0 ? '' : '-') + fmtCNY(Math.abs(avgNet));
-    netEl.classList.add(avgNet >= 0 ? 'metric-pos' : 'metric-neg');
-    document.getElementById('mAvgNetSub').textContent = `储蓄率 ${(rate * 100).toFixed(1)}%`;
-  } else {
-    // 单月详情
-    setLabels(labels.one);
-    const m = agg.byMonth[selectedMonth] || { exp: 0, inc: 0, byCat: {} };
-    const exp = m.exp, inc = m.inc, net = inc - exp;
-    const rate = inc > 0 ? net / inc : 0;
-    const expDiff = exp - avgExp;
-    const incDiff = inc - avgInc;
-
-    document.getElementById('mTotalExp').textContent = fmtCNY(exp);
-    document.getElementById('mMonths').textContent =
-      (expDiff >= 0 ? '高于月均 ' : '低于月均 ') + fmtCNY(Math.abs(expDiff));
-
-    document.getElementById('mAvgExp').textContent = fmtCNY(avgExp);
-    document.getElementById('mAvgExpSub').textContent = `12 个月平均水平`;
-
-    document.getElementById('mAvgInc').textContent = fmtCNY(inc);
-    document.getElementById('mAvgIncSub').textContent =
-      (incDiff >= 0 ? '高于月均 ' : '低于月均 ') + fmtCNY(Math.abs(incDiff));
-
-    const netEl = document.getElementById('mAvgNet');
-    netEl.classList.remove('metric-pos', 'metric-neg');
-    netEl.textContent = (net >= 0 ? '' : '-') + fmtCNY(Math.abs(net));
-    netEl.classList.add(net >= 0 ? 'metric-pos' : 'metric-neg');
-    document.getElementById('mAvgNetSub').textContent = `储蓄率 ${(rate * 100).toFixed(1)}%`;
-  }
-
-  document.getElementById('dateRange').textContent =
-    selectedMonth
-      ? `查看月份 · ${selectedMonth}`
-      : `${ms[0]} → ${ms[ms.length - 1]}`;
-}
-
-// ============================================
-// 月度柱状图（SVG）
-// ============================================
-
-function renderBars(agg) {
-  const svg = document.getElementById('barsSvg');
-  const ms = agg.months;
-  const W = Math.max(720, svg.clientWidth || 720);
-  const H = 260;
-  const padL = 50, padR = 10, padT = 16, padB = 36;
-  const innerW = W - padL - padR;
-  const innerH = H - padT - padB;
-
-  const maxV = Math.max(
-    ...ms.map(m => Math.max(agg.byMonth[m].exp, agg.byMonth[m].inc))
-  );
-  // 上取整到最近的 5000
-  const step = 5000;
-  const yMax = Math.ceil(maxV / step) * step;
-
-  const groupW = innerW / ms.length;
-  const barW = Math.min(18, (groupW - 6) / 2);
-
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.setAttribute('preserveAspectRatio', 'none');
-
-  let html = '';
-
-  // y 轴网格 + 标签
-  const ticks = 4;
-  for (let i = 0; i <= ticks; i++) {
-    const v = (yMax / ticks) * i;
-    const y = padT + innerH - (v / yMax) * innerH;
-    html += `<line class="bar-grid" x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}"/>`;
-    html += `<text class="bar-label" x="${padL - 6}" y="${y + 3}" text-anchor="end">${fmtCNYShort(v)}</text>`;
-  }
-
-  // 每个月一组
-  ms.forEach((m, i) => {
-    const cx = padL + i * groupW + groupW / 2;
-    const exp = agg.byMonth[m].exp;
-    const inc = agg.byMonth[m].inc;
-    const expH = (exp / yMax) * innerH;
-    const incH = (inc / yMax) * innerH;
-    const baseY = padT + innerH;
-
-    const x1 = cx - barW - 1;
-    const x2 = cx + 1;
-
-    const sel = m === selectedMonth;
-    const opacity = (selectedMonth && !sel) ? 0.35 : 1;
-    html += `<rect class="bar-expense" x="${x1}" y="${baseY - expH}" width="${barW}" height="${expH}" rx="2" opacity="${opacity}"/>`;
-    html += `<rect class="bar-income"  x="${x2}" y="${baseY - incH}" width="${barW}" height="${incH}" rx="2" opacity="${opacity}"/>`;
-    if (sel) {
-      // 高亮选中月：底部加一条粗线
-      html += `<rect x="${cx - groupW/2 + 2}" y="${baseY + 2}" width="${groupW - 4}" height="2" fill="var(--text-primary)" rx="1"/>`;
-    }
-
-    // 月份标签
-    html += `<text class="bar-month" x="${cx}" y="${H - 14}" text-anchor="middle">${m.slice(5)}月</text>`;
-    // 净值标签
-    const net = inc - exp;
-    const netCol = net >= 0 ? 'var(--success)' : 'var(--danger)';
-    html += `<text class="bar-value" x="${cx}" y="${H - 2}" text-anchor="middle" style="fill:${netCol}">${net >= 0 ? '+' : ''}${fmtCNYShort(net)}</text>`;
-  });
-
-  // 基线
-  html += `<line class="bar-axis" x1="${padL}" y1="${padT + innerH}" x2="${W - padR}" y2="${padT + innerH}"/>`;
-
-  svg.innerHTML = html;
-  document.getElementById('barsHint').textContent = '· 月份下方为当月盈余';
-}
-
-// ============================================
-// 类别分布
-// ============================================
-
-function renderCategories(agg) {
-  const wrap = document.getElementById('catList');
-  const n = agg.months.length;
-
-  // 单月模式：用当月类别；全年模式：用累计
-  const data = selectedMonth
-    ? Object.entries(agg.byMonth[selectedMonth]?.byCat || {})
-    : Object.entries(agg.byCat);
-
-  data.sort((a, b) => b[1] - a[1]);
-  if (data.length === 0) {
-    wrap.innerHTML = '<div class="empty">该月暂无支出记录</div>';
-    return;
-  }
-
-  const total = data.reduce((s, [, v]) => s + v, 0);
-  const max = data[0][1];
-
-  wrap.innerHTML = data.map(([c, v]) => {
-    const pct = (v / total) * 100;
-    const barW = (v / max) * 100;
-    const tag = tagFor(c);
-    const sub = selectedMonth
-      ? ''
-      : `<span class="muted">/ 月均 ${fmtCNY(v / n)}</span>`;
-    return `
-      <div class="cat-row">
-        <span class="cat-name"><span class="tag ${tag}">${c}</span></span>
-        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${barW}%"></div></div>
-        <span class="cat-amt">${fmtCNY(v)} ${sub}</span>
-        <span class="cat-pct">${pct.toFixed(1)}%</span>
-      </div>
-    `;
-  }).join('');
-}
-
-// ============================================
-// 月份 × 类别 热力表
-// ============================================
-
-function renderHeatmap(agg) {
-  const table = document.getElementById('heatTable');
-  const topCats = agg.cats.slice(0, 12); // Top 12 类别
-  const ms = agg.months;
-
-  // 找出每个类别在所有月里的最大值，用于热力分级
-  const catMax = {};
-  topCats.forEach(c => {
-    catMax[c] = Math.max(...ms.map(m => agg.byMonth[m].byCat[c] || 0));
-  });
-
-  const heatLevel = (v, max) => {
-    if (!v) return 0;
-    const r = v / max;
-    if (r < 0.2) return 1;
-    if (r < 0.4) return 2;
-    if (r < 0.6) return 3;
-    if (r < 0.8) return 4;
-    return 5;
-  };
-
-  let html = '<thead><tr><th>类别</th>';
-  ms.forEach(m => { html += `<th>${m.slice(5)}月</th>`; });
-  html += '<th>合计</th></tr></thead><tbody>';
-
-  topCats.forEach(c => {
-    html += `<tr><td>${c}</td>`;
-    let rowTotal = 0;
-    ms.forEach(m => {
-      const v = agg.byMonth[m].byCat[c] || 0;
-      rowTotal += v;
-      const lvl = heatLevel(v, catMax[c]);
-      const cls = v ? `heat-cell h-${lvl}` : 'heat-cell-empty';
-      html += `<td class="${cls}" data-cat="${c}" data-month="${m}" data-amt="${Math.round(v)}">${v ? Math.round(v).toLocaleString('en-US') : '·'}</td>`;
-    });
-    html += `<td>${Math.round(rowTotal).toLocaleString('en-US')}</td></tr>`;
-  });
-
-  // 每月总计行
-  html += '<tr class="heat-row-total"><td>月支出</td>';
-  let grand = 0;
-  ms.forEach(m => {
-    const v = agg.byMonth[m].exp;
-    grand += v;
-    html += `<td>${Math.round(v).toLocaleString('en-US')}</td>`;
-  });
-  html += `<td>${Math.round(grand).toLocaleString('en-US')}</td></tr>`;
-  html += '</tbody>';
-
-  table.innerHTML = html;
-}
-
-// ============================================
-// 开销画像（每类别月均 + sparkline）
-// ============================================
-
-function renderProfile(agg) {
-  const wrap = document.getElementById('profileGrid');
-  const ms = agg.months;
-  const n = ms.length;
-
-  wrap.innerHTML = agg.cats.map(c => {
-    const series = ms.map(m => agg.byMonth[m].byCat[c] || 0);
-    const total = series.reduce((s, v) => s + v, 0);
-    const avg = total / n;
-    const max = Math.max(...series, 1);
-
-    const w = 140, h = 22;
-    const stepX = w / (series.length - 1 || 1);
-    const points = series.map((v, i) => {
-      const x = i * stepX;
-      const y = h - (v / max) * (h - 2) - 1;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    });
-    const linePath = 'M ' + points.join(' L ');
-    const areaPath = `M 0,${h} L ${points.join(' L ')} L ${w},${h} Z`;
-
-    return `
-      <div class="profile-row">
-        <span class="profile-name">${c}</span>
-        <svg class="profile-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-          <path class="area" d="${areaPath}"/>
-          <path d="${linePath}"/>
-        </svg>
-        <span class="profile-avg">${fmtCNY(avg)}/月</span>
-      </div>
-    `;
-  }).join('');
-}
-
-// ============================================
-// 大额记录 Top 20
-// ============================================
-
-let allRecords = [];
-
-let currentFilterCat = '';
-
-function renderBigList() {
-  const wrap = document.getElementById('bigList');
-  const expenses = allRecords.filter(r =>
-    r.t === '支出'
-    && (!currentFilterCat || r.c === currentFilterCat)
-    && (!selectedMonth || r.d.slice(0, 7) === selectedMonth)
-  );
-  const top = expenses.slice().sort((a, b) => b.a - a.a).slice(0, 20);
-
-  if (top.length === 0) {
-    wrap.innerHTML = '<div class="empty">暂无记录</div>';
-    return;
-  }
-
-  wrap.innerHTML = top.map(r => `
-    <div class="big-row">
-      <span class="big-date">${r.d}</span>
-      <span class="tag ${tagFor(r.c)}">${r.c}</span>
-      <span class="big-note">${r.n || '—'}</span>
-      <span class="big-amt">${fmtCNY(r.a)}</span>
-    </div>
-  `).join('');
-}
-
-function setupHeatTooltip() {
-  let tip = document.querySelector('.heat-tooltip');
-  if (!tip) {
-    tip = document.createElement('div');
-    tip.className = 'heat-tooltip';
-    document.body.appendChild(tip);
-  }
-  const table = document.getElementById('heatTable');
-
-  table.addEventListener('mousemove', (e) => {
-    const cell = e.target.closest('td.heat-cell, td.heat-cell-empty');
-    if (!cell || !cell.dataset.cat) {
-      tip.classList.remove('show');
-      return;
-    }
-    const cat = cell.dataset.cat;
-    const month = cell.dataset.month;
-    const amt = parseInt(cell.dataset.amt, 10);
-    const amtStr = amt > 0 ? '¥' + amt.toLocaleString('en-US') : '无支出';
-    tip.innerHTML = `<strong>${cat}</strong> · ${month}<br><span class="t-amt">${amtStr}</span>`;
-    const r = cell.getBoundingClientRect();
-    tip.style.left = (r.left + r.width / 2) + 'px';
-    tip.style.top = r.top + 'px';
-    tip.classList.add('show');
-  });
-
-  table.addEventListener('mouseleave', () => tip.classList.remove('show'));
-}
-
-function setupBigFilter(agg) {
-  const sel = document.getElementById('bigCatFilter');
-  agg.cats.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = c;
-    sel.appendChild(opt);
-  });
-  sel.addEventListener('change', e => {
-    currentFilterCat = e.target.value;
-    renderBigList();
-  });
-}
-
-// ============================================
-// 月份切换
-// ============================================
-
-function renderMonthTabs(agg, onChange) {
-  const wrap = document.getElementById('dashMonthTabs');
-  const months = agg.months.slice().reverse(); // 最新月在前
-  const items = [{ value: '', label: '全年总览' }, ...months.map(m => ({ value: m, label: m.slice(2).replace('-', '·') }))];
-  wrap.innerHTML = items.map(it =>
-    `<button class="month-tab${it.value === selectedMonth ? ' active' : ''}" data-month="${it.value}" type="button">${it.label}</button>`
-  ).join('');
-  wrap.querySelectorAll('.month-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      selectedMonth = btn.dataset.month;
-      wrap.querySelectorAll('.month-tab').forEach(b => b.classList.toggle('active', b === btn));
-      onChange();
-    });
-  });
-}
-
-// ============================================
-// 入口
-// ============================================
-
-async function init() {
-  try {
-    let records;
-    if (window.__RECORDS__) {
-      // 单文件版：数据已被 build.sh 内联
-      records = window.__RECORDS__;
-    } else {
-      // 开发版：通过 HTTP 加载
-      const res = await fetch('data/records.json');
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      records = await res.json();
-    }
-    allRecords = records;
-    const agg = aggregate(records);
-
-    function refresh() {
-      renderSummary(agg);
-      renderBars(agg);
-      renderCategories(agg);
-      renderBigList();
-    }
-
-    renderMonthTabs(agg, refresh);
-    refresh();
-    renderHeatmap(agg);
-    setupHeatTooltip();
-    renderProfile(agg);
-    setupBigFilter(agg);
-
-    // 切换到看板 tab 时重绘柱状图（首次显示后才有正确的宽度）
-    window.__redrawDashboard = () => renderBars(agg);
-
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => renderBars(agg), 150);
-    });
-  } catch (e) {
-    const host = document.getElementById('view-dashboard') || document.querySelector('.app');
-    host.insertAdjacentHTML(
-      'beforeend',
-      `<div class="card" style="color:var(--danger)">数据加载失败：${e.message}<br/>请通过 HTTP 访问（如 <code>python3 -m http.server 8080</code>），不要直接双击打开。</div>`
-    );
-    console.error(e);
-  }
-}
-
-init();
-})();
-
-</script>
+<script>document.write('<script type="module" src="app.js?t=' + Date.now() + '"><\/script>');</script>
+<script>document.write('<script src="dashboard.js?t=' + Date.now() + '"><\/script>');</script>
 
 </body>
 </html>
