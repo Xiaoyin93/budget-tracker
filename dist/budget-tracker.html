@@ -205,6 +205,93 @@ body {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
+  gap: 12px;
+}
+
+/* 实时汇率换算小工具 */
+.fx-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+.fx-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.fx-cur {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+.fx-select {
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.fx-select:focus { border-color: var(--text-primary); }
+.fx-input {
+  width: 70px;
+  padding: 4px 6px;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+}
+.fx-input:focus { border-color: var(--text-primary); }
+.fx-output {
+  min-width: 70px;
+  padding: 4px 6px;
+  text-align: right;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.fx-swap {
+  width: 24px; height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fx-swap:hover { background: var(--text-primary); color: var(--bg-card); border-color: var(--text-primary); }
+.fx-swap svg { width: 12px; height: 12px; }
+.fx-meta {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-align: right;
+}
+.fx-meta.error { color: var(--danger, #b34); }
+@media (max-width: 720px) {
+  .fx-widget { padding: 6px 8px; }
+  .fx-input, .fx-output { width: 60px; min-width: 60px; }
 }
 
 .brand {
@@ -1481,6 +1568,19 @@ body.privacy-mode .item-input::placeholder { color: transparent; }
         <input class="book-name" id="bookName" type="text" maxlength="30" placeholder="点击命名你的账本" autocomplete="off" />
       </div>
     </div>
+
+    <div class="fx-widget" id="fxWidget" title="实时汇率换算">
+      <div class="fx-row">
+        <select class="fx-select" id="fxFromCur" aria-label="原币种"></select>
+        <input class="fx-input" id="fxFromInput" type="text" inputmode="decimal" value="100" autocomplete="off" />
+        <button class="fx-swap" id="fxSwap" type="button" title="左右互换" aria-label="左右互换">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.0503 12.0503L21 16.9999L16.0503 21.9496L14.636 20.5354L17.172 17.9999H4V15.9999H17.172L14.636 13.4645L16.0503 12.0503ZM7.94975 2.05029L9.36396 3.46451L6.828 5.99997H20V7.99997H6.828L9.36396 10.5354L7.94975 11.9496L3 6.99997L7.94975 2.05029Z"></path></svg>
+        </button>
+        <select class="fx-select" id="fxToCur" aria-label="目标币种"></select>
+        <input class="fx-input" id="fxToInput" type="text" inputmode="decimal" value="" autocomplete="off" />
+      </div>
+      <div class="fx-meta" id="fxMeta">加载汇率中…</div>
+    </div>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -1647,6 +1747,150 @@ body.privacy-mode .item-input::placeholder { color: transparent; }
   tabs.forEach(b => b.addEventListener('click', () => switchTo(b.dataset.tab)));
   const initial = (location.hash || '').slice(1);
   if (initial === 'dashboard') switchTo('dashboard');
+})();
+
+// 实时汇率换算（双向 + 多币种 + 分钟级刷新）
+(function () {
+  // 常用币种列表
+  const CURRENCIES = [
+    'HKD','CNY','USD','EUR','JPY','GBP','SGD','KRW','TWD',
+    'AUD','CAD','CHF','THB','MYR','NZD','MOP'
+  ];
+  const STORE_KEY = 'budget_tracker:fx_pref_v2';
+  const CACHE_KEY = 'budget_tracker:fx_rates_v2';
+  const FRESH_MS = 60 * 1000;          // 60 秒视为「新鲜」
+  const POLL_MS  = 60 * 1000;          // 每 60 秒自动刷新
+
+  const fromCurEl = document.getElementById('fxFromCur');
+  const toCurEl   = document.getElementById('fxToCur');
+  const fromInEl  = document.getElementById('fxFromInput');
+  const toInEl    = document.getElementById('fxToInput');
+  const swapEl    = document.getElementById('fxSwap');
+  const metaEl    = document.getElementById('fxMeta');
+
+  // 初始化下拉
+  const optHtml = CURRENCIES.map(c => `<option value="${c}">${c}</option>`).join('');
+  fromCurEl.innerHTML = toCurEl.innerHTML = optHtml;
+
+  // 读取上次偏好
+  let pref = { from: 'HKD', to: 'CNY' };
+  try { const p = JSON.parse(localStorage.getItem(STORE_KEY) || ''); if (p && p.from && p.to) pref = p; } catch (_) {}
+  fromCurEl.value = pref.from;
+  toCurEl.value = pref.to;
+
+  let state = { rate: null, ts: 0, stale: false, lastEdit: 'from' };
+  let pollTimer = null;
+
+  const fmt = (n) => {
+    if (!isFinite(n)) return '';
+    const abs = Math.abs(n);
+    const digits = abs >= 1000 ? 2 : abs >= 1 ? 4 : 6;
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: digits });
+  };
+
+  function recompute() {
+    if (state.rate == null) return;
+    if (state.lastEdit === 'from') {
+      const v = parseFloat(fromInEl.value);
+      toInEl.value = isFinite(v) ? fmt(v * state.rate) : '';
+    } else {
+      const v = parseFloat(toInEl.value.replace(/,/g, ''));
+      fromInEl.value = isFinite(v) ? fmt(v / state.rate) : '';
+    }
+  }
+
+  function paintMeta() {
+    if (state.rate == null) {
+      metaEl.textContent = '汇率不可用';
+      metaEl.classList.add('error');
+      return;
+    }
+    metaEl.classList.toggle('error', !!state.stale);
+    const age = Math.floor((Date.now() - state.ts) / 1000);
+    const ageStr = age < 60 ? `${age} 秒前` : `${Math.floor(age/60)} 分钟前`;
+    metaEl.textContent = `1 ${fromCurEl.value} = ${state.rate.toFixed(4)} ${toCurEl.value} · ${ageStr}${state.stale ? ' · 离线' : ''}`;
+  }
+
+  // 拉某 base 的所有汇率（缓存）
+  async function getRatesFor(base) {
+    let cache = {};
+    try { cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); } catch (_) {}
+    const entry = cache[base];
+    if (entry && Date.now() - entry.ts < FRESH_MS) {
+      return { rates: entry.rates, ts: entry.ts, fromCache: true };
+    }
+    try {
+      const r = await fetch(`https://open.er-api.com/v6/latest/${base}`, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      if (j.result !== 'success' || !j.rates) throw new Error('bad response');
+      const ts = (j.time_last_update_unix ? j.time_last_update_unix * 1000 : Date.now());
+      cache[base] = { rates: j.rates, ts };
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch (_) {}
+      return { rates: j.rates, ts, fromCache: false };
+    } catch (e) {
+      if (entry) return { rates: entry.rates, ts: entry.ts, fromCache: true, stale: true };
+      throw e;
+    }
+  }
+
+  async function refresh() {
+    const from = fromCurEl.value, to = toCurEl.value;
+    if (from === to) {
+      state.rate = 1; state.ts = Date.now(); state.stale = false;
+      recompute(); paintMeta(); return;
+    }
+    try {
+      const res = await getRatesFor(from);
+      const rate = res.rates[to];
+      if (rate == null) throw new Error('无该币种');
+      state.rate = rate; state.ts = res.ts; state.stale = !!res.stale;
+      recompute(); paintMeta();
+    } catch (e) {
+      if (state.rate == null) {
+        metaEl.textContent = '无法获取汇率（' + e.message + '）';
+        metaEl.classList.add('error');
+      } else {
+        state.stale = true; paintMeta();
+      }
+    }
+  }
+
+  function savePref() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ from: fromCurEl.value, to: toCurEl.value })); } catch (_) {}
+  }
+
+  function onCurChange() {
+    savePref();
+    state.rate = null; state.ts = 0;
+    metaEl.textContent = '加载汇率中…';
+    metaEl.classList.remove('error');
+    refresh();
+  }
+
+  fromCurEl.addEventListener('change', onCurChange);
+  toCurEl.addEventListener('change', onCurChange);
+  fromInEl.addEventListener('input', () => { state.lastEdit = 'from'; recompute(); });
+  toInEl.addEventListener('input',   () => { state.lastEdit = 'to';   recompute(); });
+
+  swapEl.addEventListener('click', () => {
+    const a = fromCurEl.value, b = toCurEl.value;
+    fromCurEl.value = b; toCurEl.value = a;
+    // 数值也跟着换：把右边显示值放进左边输入
+    const right = toInEl.value;
+    toInEl.value = fromInEl.value;
+    fromInEl.value = right;
+    state.lastEdit = 'from';
+    onCurChange();
+  });
+
+  refresh();
+  // 元数据每秒刷新一下「N 秒前」
+  setInterval(paintMeta, 1000);
+  // 每 60 秒拉新汇率
+  pollTimer = setInterval(refresh, POLL_MS);
+  // 窗口重新可见时立刻刷一次
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 })();
 </script>
 <script>document.write('<script type="module" src="app.js?t=' + Date.now() + '"><\/script>');</script>

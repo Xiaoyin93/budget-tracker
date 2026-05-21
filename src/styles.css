@@ -198,6 +198,93 @@ body {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
+  gap: 12px;
+}
+
+/* 实时汇率换算小工具 */
+.fx-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+.fx-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.fx-cur {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+.fx-select {
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.fx-select:focus { border-color: var(--text-primary); }
+.fx-input {
+  width: 70px;
+  padding: 4px 6px;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+}
+.fx-input:focus { border-color: var(--text-primary); }
+.fx-output {
+  min-width: 70px;
+  padding: 4px 6px;
+  text-align: right;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.fx-swap {
+  width: 24px; height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fx-swap:hover { background: var(--text-primary); color: var(--bg-card); border-color: var(--text-primary); }
+.fx-swap svg { width: 12px; height: 12px; }
+.fx-meta {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-align: right;
+}
+.fx-meta.error { color: var(--danger, #b34); }
+@media (max-width: 720px) {
+  .fx-widget { padding: 6px 8px; }
+  .fx-input, .fx-output { width: 60px; min-width: 60px; }
 }
 
 .brand {
