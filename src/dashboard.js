@@ -21,6 +21,10 @@ function tagFor(name) {
   return TAG_CLASSES[h % TAG_CLASSES.length];
 }
 
+// 固定开销类别（住房、车、保险、通讯、交通、网络）；其余视为日常开销
+const FIXED_CATS = new Set(['住房', '车', '保险', '通讯', '交通', '网络']);
+const isFixed = (c) => FIXED_CATS.has(c);
+
 // 当前选区：{ type: 'year' | 'recent6' | 'recent3' | 'month', month?: 'YYYY-MM' }
 let selection = { type: 'year' };
 
@@ -259,8 +263,8 @@ function renderCategories(agg) {
   const total = data.reduce((s, [, v]) => s + v, 0);
   const max = data[0][1];
 
-  wrap.innerHTML = data.map(([c, v]) => {
-    const pct = (v / total) * 100;
+  const renderRow = ([c, v]) => {
+    const pct = total > 0 ? (v / total) * 100 : 0;
     const barW = (v / max) * 100;
     const tag = tagFor(c);
     const barColor = TAG_BAR_COLORS[tag];
@@ -275,7 +279,29 @@ function renderCategories(agg) {
         <span class="cat-pct">${pct.toFixed(1)}%</span>
       </div>
     `;
-  }).join('');
+  };
+
+  const fixed = data.filter(([c]) => isFixed(c));
+  const daily = data.filter(([c]) => !isFixed(c));
+  const sumOf = (arr) => arr.reduce((s, [, v]) => s + v, 0);
+  const fixedSum = sumOf(fixed);
+  const dailySum = sumOf(daily);
+
+  const groupHeader = (title, sum) => `
+    <div class="cat-group-head">
+      <span class="cat-group-title">${title}</span>
+      <span class="cat-group-sum">${fmtCNY(sum)} <span class="muted">· ${total > 0 ? ((sum / total) * 100).toFixed(1) : '0.0'}%</span></span>
+    </div>
+  `;
+
+  let html = '';
+  if (fixed.length) {
+    html += groupHeader('固定开销', fixedSum) + fixed.map(renderRow).join('');
+  }
+  if (daily.length) {
+    html += groupHeader('日常开销', dailySum) + daily.map(renderRow).join('');
+  }
+  wrap.innerHTML = html;
 }
 
 // ============================================
@@ -284,12 +310,16 @@ function renderCategories(agg) {
 
 function renderHeatmap(agg) {
   const table = document.getElementById('heatTable');
-  const topCats = agg.cats.slice(0, 12); // Top 12 类别
   const ms = agg.months;
+
+  // 拆成固定/日常两组，每组按总额排序；都取 Top 12（在各自组内）
+  const fixedCats = agg.cats.filter(isFixed).slice(0, 12);
+  const dailyCats = agg.cats.filter(c => !isFixed(c)).slice(0, 12);
+  const allShown = [...fixedCats, ...dailyCats];
 
   // 找出每个类别在所有月里的最大值，用于热力分级
   const catMax = {};
-  topCats.forEach(c => {
+  allShown.forEach(c => {
     catMax[c] = Math.max(...ms.map(m => agg.byMonth[m].byCat[c] || 0));
   });
 
@@ -303,22 +333,31 @@ function renderHeatmap(agg) {
     return 5;
   };
 
+  const colSpan = ms.length + 2;
   let html = '<thead><tr><th>类别</th>';
   ms.forEach(m => { html += `<th>${m.slice(5)}月</th>`; });
   html += '<th>合计</th></tr></thead><tbody>';
 
-  topCats.forEach(c => {
-    html += `<tr><td>${c}</td>`;
-    let rowTotal = 0;
-    ms.forEach(m => {
-      const v = agg.byMonth[m].byCat[c] || 0;
-      rowTotal += v;
-      const lvl = heatLevel(v, catMax[c]);
-      const cls = v ? `heat-cell h-${lvl}` : 'heat-cell-empty';
-      html += `<td class="${cls}" data-cat="${c}" data-month="${m}" data-amt="${Math.round(v)}">${v ? Math.round(v).toLocaleString('en-US') : '·'}</td>`;
+  const renderGroup = (title, cats) => {
+    if (!cats.length) return '';
+    let block = `<tr class="heat-group-head"><td colspan="${colSpan}">${title}</td></tr>`;
+    cats.forEach(c => {
+      block += `<tr><td>${c}</td>`;
+      let rowTotal = 0;
+      ms.forEach(m => {
+        const v = agg.byMonth[m].byCat[c] || 0;
+        rowTotal += v;
+        const lvl = heatLevel(v, catMax[c]);
+        const cls = v ? `heat-cell h-${lvl}` : 'heat-cell-empty';
+        block += `<td class="${cls}" data-cat="${c}" data-month="${m}" data-amt="${Math.round(v)}">${v ? Math.round(v).toLocaleString('en-US') : '·'}</td>`;
+      });
+      block += `<td>${Math.round(rowTotal).toLocaleString('en-US')}</td></tr>`;
     });
-    html += `<td>${Math.round(rowTotal).toLocaleString('en-US')}</td></tr>`;
-  });
+    return block;
+  };
+
+  html += renderGroup('固定开销', fixedCats);
+  html += renderGroup('日常开销', dailyCats);
 
   // 每月总计行
   html += '<tr class="heat-row-total"><td>月支出</td>';
@@ -343,7 +382,7 @@ function renderProfile(agg) {
   const ms = agg.months;
   const n = ms.length;
 
-  wrap.innerHTML = agg.cats.map(c => {
+  const renderOne = (c) => {
     const series = ms.map(m => agg.byMonth[m].byCat[c] || 0);
     const total = series.reduce((s, v) => s + v, 0);
     const avg = total / n;
@@ -369,7 +408,16 @@ function renderProfile(agg) {
         <span class="profile-avg">${fmtCNY(avg)}/月</span>
       </div>
     `;
-  }).join('');
+  };
+
+  const fixedCats = agg.cats.filter(isFixed);
+  const dailyCats = agg.cats.filter(c => !isFixed(c));
+  const groupHead = (title) => `<div class="profile-group-head">${title}</div>`;
+
+  let html = '';
+  if (fixedCats.length) html += groupHead('固定开销') + fixedCats.map(renderOne).join('');
+  if (dailyCats.length) html += groupHead('日常开销') + dailyCats.map(renderOne).join('');
+  wrap.innerHTML = html;
 }
 
 // ============================================
