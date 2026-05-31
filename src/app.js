@@ -165,10 +165,12 @@ function recalc() {
   SECTIONS.forEach(sec => {
     let secBudget = 0;
     let secActual = 0;
+    const isSavings = sec.id === 'savings';
     sec.items.forEach(item => {
       const budCNY = toCNY(item.budget, item.cur);
       secBudget += budCNY;
-      totalBudgetCNY += budCNY;
+      // 「本月实际 / 预算内」只统计开销（固定 + 日常），不含储蓄
+      if (!isSavings) totalBudgetCNY += budCNY;
       const inp = document.querySelector(`input[data-item="${item.id}"]`);
       const raw = inp && inp.value !== '' ? parseFloat(inp.value) : null;
       let actCNY = 0;
@@ -176,7 +178,7 @@ function recalc() {
       if (raw !== null && !isNaN(raw)) {
         actCNY = toCNY(raw, item.cur);
         secActual += actCNY;
-        totalActualCNY += actCNY;
+        if (!isSavings) totalActualCNY += actCNY;
         anyFilled = true;
         const diff = raw - item.budget;
         if (diff === 0) {
@@ -398,12 +400,13 @@ function renderHistory() {
     list.innerHTML = '<div class="empty">还没有保存过的月份，填完本月后点「保存本月」就会显示在这里。</div>';
     return;
   }
+  // 「本月实际 / 预算内」只算开销（固定 + 日常），不含储蓄
   const totalBudgetCNY = SECTIONS.reduce((s, sec) =>
-    s + sec.items.reduce((ss, i) => ss + toCNY(i.budget, i.cur), 0), 0);
+    sec.id === 'savings' ? s : s + sec.items.reduce((ss, i) => ss + toCNY(i.budget, i.cur), 0), 0);
   const rows = [];
   months.slice().reverse().forEach(m => {
     const data = storageGet('month:' + m);
-    let totalCNY = 0;
+    let totalCNY = 0;       // 仅开销
     let savingsCNY = 0;
     if (data && data.actuals) {
       SECTIONS.forEach(sec => {
@@ -411,8 +414,8 @@ function renderHistory() {
           const v = data.actuals[item.id];
           if (v !== undefined && v !== null) {
             const c = toCNY(v, item.cur);
-            totalCNY += c;
             if (sec.id === 'savings') savingsCNY += c;
+            else totalCNY += c;
           }
         });
       });
