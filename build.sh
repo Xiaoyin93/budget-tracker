@@ -45,6 +45,8 @@ for img in (src_dir / 'assets').glob('*.png'):
 # 去掉 ES 模块语法（单文件不用模块系统）
 config_inline = re.sub(r'^export\s+', '', config, flags=re.MULTILINE)
 app_inline    = re.sub(r"^import\s+.*?from\s+.*?;\s*\n", '', app, flags=re.MULTILINE)
+# 单文件版用内联的 CONFIG/SECTIONS，去掉动态 import 行
+app_inline    = re.sub(r"^const\s*\{\s*CONFIG\s*,\s*SECTIONS\s*\}\s*=\s*await\s+import\(.+?\);\s*\n", '', app_inline, flags=re.MULTILINE)
 
 # 1) 样式：<link> → <style>
 html = html.replace(

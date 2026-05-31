@@ -1,5 +1,6 @@
 // 月度预算记账工具 - 主逻辑
-import { CONFIG, SECTIONS } from './config.js';
+// 用动态 import 绕过浏览器对 ES 模块的强缓存（这样改 config.js 后刷新即可生效）
+const { CONFIG, SECTIONS } = await import('./config.js?t=' + Date.now());
 
 const STORAGE_PREFIX = 'budget_tracker:';
 const INCOME_CNY = CONFIG.incomeHKD * CONFIG.exchangeRate;
