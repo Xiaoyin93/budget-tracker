@@ -27,7 +27,7 @@ export const SECTIONS = [
     items: [
       { id: 'rent',      name: '住房', budget: 5554, cur: 'CNY' },
       { id: 'car',       name: '车',   budget: 1666, cur: 'CNY' },
-      { id: 'insurance', name: '保险', budget: 300,  cur: 'CNY' },
+      { id: 'insurance', name: '保险', budget: 1545, cur: 'CNY' },
       { id: 'commute',   name: '交通', budget: 660,  cur: 'CNY' },
       { id: 'phone',     name: '通讯', budget: 100,  cur: 'CNY' },
       { id: 'net',       name: '网络', budget: 100,  cur: 'CNY' }
