@@ -13,3 +13,5 @@ src/data/records.json
 # 临时构建产物（dist 单文件保留以便用户直接下载）
 *.log
 node_modules/
+鲨鱼记账明细.csv
+*.csv
