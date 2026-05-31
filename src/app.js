@@ -1,6 +1,9 @@
 // 月度预算记账工具 - 主逻辑
 // 用动态 import 绕过浏览器对 ES 模块的强缓存（这样改 config.js 后刷新即可生效）
 const { CONFIG, SECTIONS } = await import('./config.js?t=' + Date.now());
+// 暴露给 dashboard.js 用于把 localStorage 已保存的月份合并到历史看板
+window.__CONFIG = CONFIG;
+window.__SECTIONS = SECTIONS;
 
 const STORAGE_PREFIX = 'budget_tracker:';
 const INCOME_CNY = CONFIG.incomeHKD * CONFIG.exchangeRate;
@@ -402,6 +405,8 @@ function saveMonth() {
     updateSaveStatus();
     showToast('已保存 ' + currentMonth);
     renderHistory();
+    // 通知历史看板重新聚合
+    if (typeof window.__refreshDashboardData === 'function') window.__refreshDashboardData();
   } else {
     showToast('保存失败，请检查浏览器存储权限', true);
   }

@@ -586,12 +586,72 @@ async function loadRecords() {
   throw new Error('找不到 records 数据');
 }
 
+// 把 localStorage 里 app 保存的月份合成 dashboard 用的 records 格式
+function buildLocalRecords() {
+  const PREFIX = 'budget_tracker:';
+  let months;
+  try { months = JSON.parse(localStorage.getItem(PREFIX + 'months_tracked') || '[]'); }
+  catch (_) { return []; }
+  if (!months || !months.length) return [];
+  const SECTIONS = window.__SECTIONS || [];
+  const CFG = window.__CONFIG || { exchangeRate: 0.87 };
+  if (!SECTIONS.length) return [];
+  const idMap = {};
+  SECTIONS.forEach(sec => sec.items.forEach(item => {
+    idMap[item.id] = { name: item.name, cur: item.cur, secId: sec.id };
+  }));
+  const out = [];
+  months.forEach(m => {
+    let raw;
+    try { raw = JSON.parse(localStorage.getItem(PREFIX + 'month:' + m) || 'null'); }
+    catch (_) { return; }
+    if (!raw) return;
+    const day = m + '-01';
+    if (raw.actuals) {
+      Object.entries(raw.actuals).forEach(([id, amt]) => {
+        if (amt == null || isNaN(amt)) return;
+        const meta = idMap[id];
+        if (!meta) return;
+        if (meta.secId === 'savings') return; // 储蓄不算消费
+        const amtCNY = meta.cur === 'CNY' ? Number(amt) : Number(amt) * CFG.exchangeRate;
+        out.push({ d: day, t: '支出', c: meta.name, a: amtCNY });
+      });
+    }
+    if (raw.income) {
+      out.push({ d: day, t: '收入', c: '收入', a: Number(raw.income) });
+    }
+  });
+  return out;
+}
+
+function mergeWithLocal(base) {
+  const local = buildLocalRecords();
+  if (!local.length) return base;
+  const localMonths = new Set(local.map(r => r.d.slice(0, 7)));
+  // localStorage 月份覆盖 records.json 同月份
+  return base.filter(r => !localMonths.has(r.d.slice(0, 7))).concat(local);
+}
+
+// 等 app.js 把 SECTIONS 暴露到 window（最多等 2s，没等到也不阻塞）
+async function waitForSections(maxMs) {
+  const t0 = Date.now();
+  while (!window.__SECTIONS && Date.now() - t0 < maxMs) {
+    await new Promise(r => setTimeout(r, 30));
+  }
+}
+
 async function init() {
   try {
-    const records = await loadRecords();
-    allRecords = records;
-    const agg = aggregate(records);
-    currentAgg = agg;
+    await waitForSections(2000);
+    const baseRecords = await loadRecords();
+    let agg;
+    function rebuild() {
+      const merged = mergeWithLocal(baseRecords);
+      allRecords = merged;
+      agg = aggregate(merged);
+      currentAgg = agg;
+    }
+    rebuild();
 
     function refresh() {
       renderSummary(agg);
@@ -600,15 +660,20 @@ async function init() {
       renderBigList();
     }
 
-    renderMonthTabs(agg, refresh);
-    refresh();
-    renderHeatmap(agg);
-    setupHeatTooltip();
-    renderProfile(agg);
-    setupBigFilter(agg);
+    function renderAll() {
+      renderMonthTabs(agg, refresh);
+      refresh();
+      renderHeatmap(agg);
+      setupHeatTooltip();
+      renderProfile(agg);
+      setupBigFilter(agg);
+    }
+    renderAll();
 
-    // 切换到看板 tab 时重绘柱状图（首次显示后才有正确的宽度）
+    // 切换到看板 tab 时重绘柱状图
     window.__redrawDashboard = () => renderBars(agg);
+    // 每月记录保存后：重新读 localStorage 合并并整页重渲染
+    window.__refreshDashboardData = () => { rebuild(); renderAll(); };
 
     let resizeTimer;
     window.addEventListener('resize', () => {
