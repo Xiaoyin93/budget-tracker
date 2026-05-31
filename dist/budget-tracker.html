@@ -1959,13 +1959,13 @@ const SECTIONS = [
   {
     id: 'savings',
     title: '储蓄 + 投资',
-    subtitle: '多币种池子',
+    subtitle: '多币种池子（按总目标统计，不做单项预算）',
+    // 整组总预算（CNY 等值）。设置后会忽略下方 item 的 budget 字段。
+    totalBudgetCNY: 10939,
     items: [
-      { id: 'rmb_em', name: 'RMB 应急金', budget: 2500, cur: 'CNY' },
-      { id: 'invest', name: '基金定投', budget: 2000, cur: 'HKD' },
-      { id: 'hkd_em', name: '港币应急金', budget: 2875, cur: 'HKD' },
-      { id: 'wedding', name: '婚礼基金', budget: 4800, cur: 'HKD' },
-      { id: 'buffer', name: '港币活期缓冲', budget: 25, cur: 'HKD' }
+      { id: 'rmb_save', name: 'RMB 储蓄', budget: 0, cur: 'CNY' },
+      { id: 'hkd_save', name: 'HKD 储蓄', budget: 0, cur: 'HKD' },
+      { id: 'invest',   name: '投资理财', budget: 0, cur: 'HKD' }
     ]
   }
 ];
@@ -2048,31 +2048,38 @@ function renderSections() {
   const wrap = document.getElementById('sectionsWrap');
   let html = '';
   SECTIONS.forEach(sec => {
-    let budgetCNY = 0;
-    sec.items.forEach(i => { budgetCNY += toCNY(i.budget, i.cur); });
+    const useGroupTotal = typeof sec.totalBudgetCNY === 'number';
+    let budgetCNY = useGroupTotal
+      ? sec.totalBudgetCNY
+      : sec.items.reduce((s, i) => s + toCNY(i.budget, i.cur), 0);
     const icon = SECTION_ICONS[sec.id] || '';
-    html += `<div class="section" data-section="${sec.id}">
+    html += `<div class="section${useGroupTotal ? ' no-item-budget' : ''}" data-section="${sec.id}">
       <div class="section-header">
         <span class="section-title">${icon}${sec.title}</span>
         <span class="section-sub">${sec.subtitle} · 预算 ${fmtCNY(budgetCNY)}</span>
       </div>`;
     sec.items.forEach(item => {
       const curLabel = item.cur === 'CNY' ? 'RMB' : 'HKD';
+      // 整组预算模式：不展示单项预算与占位预算
+      const budgetLabel = useGroupTotal ? '' : fmtByCur(item.budget, item.cur);
+      const placeholder = useGroupTotal ? '0' : item.budget;
       html += `<div class="item-row">
         <span class="item-name">${item.name}<span class="cur-pill">${curLabel}</span></span>
-        <span class="item-budget">${fmtByCur(item.budget, item.cur)}</span>
-        <input class="item-input" type="number" min="0" step="1" placeholder="${item.budget}" data-item="${item.id}" data-cur="${item.cur}" data-budget="${item.budget}" />
+        <span class="item-budget">${budgetLabel}</span>
+        <input class="item-input" type="number" min="0" step="1" placeholder="${placeholder}" data-item="${item.id}" data-cur="${item.cur}" data-budget="${item.budget}" />
         <span class="item-variance" data-var="${item.id}">—</span>
       </div>`;
     });
     html += `<div class="section-footer">
         <span>小计（RMB 等值）</span>
         <span data-subtotal="${sec.id}">¥0 / ${fmtCNY(budgetCNY)}</span>
-      </div>
-      <div class="section-actions">
+      </div>`;
+    if (!useGroupTotal) {
+      html += `<div class="section-actions">
         <button type="button" data-fill-section="${sec.id}">按预算填本组</button>
-      </div>
-    </div>`;
+      </div>`;
+    }
+    html += `</div>`;
   });
   wrap.innerHTML = html;
 }
@@ -2137,6 +2144,8 @@ function recalc() {
     let secBudget = 0;
     let secActual = 0;
     const isSavings = sec.id === 'savings';
+    // 整组总预算：若 section 配了 totalBudgetCNY，则用它替代各 item.budget 之和
+    const groupTotalBudgetCNY = (typeof sec.totalBudgetCNY === 'number') ? sec.totalBudgetCNY : null;
     sec.items.forEach(item => {
       const budCNY = toCNY(item.budget, item.cur);
       secBudget += budCNY;
@@ -2151,29 +2160,41 @@ function recalc() {
         secActual += actCNY;
         if (!isSavings) totalActualCNY += actCNY;
         anyFilled = true;
-        const diff = raw - item.budget;
-        if (diff === 0) {
-          varEl.textContent = '✓';
-          varEl.className = 'item-variance v-ok';
-        } else if (diff < 0) {
-          varEl.textContent = fmtByCur(Math.abs(diff), item.cur) + ' ↓';
-          varEl.className = 'item-variance v-ok';
+        // 若该组用整组预算（无单项预算），不显示单项 variance
+        if (groupTotalBudgetCNY != null) {
+          varEl.textContent = '';
+          varEl.className = 'item-variance';
         } else {
-          varEl.textContent = '+' + fmtByCur(diff, item.cur);
-          varEl.className = 'item-variance v-over';
+          const diff = raw - item.budget;
+          if (diff === 0) {
+            varEl.textContent = '✓';
+            varEl.className = 'item-variance v-ok';
+          } else if (diff < 0) {
+            varEl.textContent = fmtByCur(Math.abs(diff), item.cur) + ' ↓';
+            varEl.className = 'item-variance v-ok';
+          } else {
+            varEl.textContent = '+' + fmtByCur(diff, item.cur);
+            varEl.className = 'item-variance v-over';
+          }
         }
       } else {
         varEl.textContent = '—';
         varEl.className = 'item-variance';
       }
-      if (sec.id === 'savings') {
-        savingsTargetCNY += budCNY;
+      if (isSavings) {
         if (raw !== null && !isNaN(raw)) {
           savingsActualCNY += actCNY;
           savingsFilled = true;
         }
       }
     });
+    // 用整组预算覆盖 section 的预算显示
+    if (groupTotalBudgetCNY != null) secBudget = groupTotalBudgetCNY;
+    if (isSavings) {
+      savingsTargetCNY = (groupTotalBudgetCNY != null)
+        ? groupTotalBudgetCNY
+        : sec.items.reduce((s, i) => s + toCNY(i.budget, i.cur), 0);
+    }
     const subEl = document.querySelector(`[data-subtotal="${sec.id}"]`);
     if (subEl) subEl.textContent = fmtCNY(secActual) + ' / ' + fmtCNY(secBudget);
   });

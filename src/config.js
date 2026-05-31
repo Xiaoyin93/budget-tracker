@@ -63,13 +63,13 @@ export const SECTIONS = [
   {
     id: 'savings',
     title: '储蓄 + 投资',
-    subtitle: '多币种池子',
+    subtitle: '多币种池子（按总目标统计，不做单项预算）',
+    // 整组总预算（CNY 等值）。设置后会忽略下方 item 的 budget 字段。
+    totalBudgetCNY: 10939,
     items: [
-      { id: 'rmb_em', name: 'RMB 应急金', budget: 2500, cur: 'CNY' },
-      { id: 'invest', name: '基金定投', budget: 2000, cur: 'HKD' },
-      { id: 'hkd_em', name: '港币应急金', budget: 2875, cur: 'HKD' },
-      { id: 'wedding', name: '婚礼基金', budget: 4800, cur: 'HKD' },
-      { id: 'buffer', name: '港币活期缓冲', budget: 25, cur: 'HKD' }
+      { id: 'rmb_save', name: 'RMB 储蓄', budget: 0, cur: 'CNY' },
+      { id: 'hkd_save', name: 'HKD 储蓄', budget: 0, cur: 'HKD' },
+      { id: 'invest',   name: '投资理财', budget: 0, cur: 'HKD' }
     ]
   }
 ];
