@@ -54,17 +54,29 @@ html = html.replace(
     f'<style>\n{css}\n</style>',
 )
 
-# 2) 主逻辑：<script type="module" src="app.js"> → 内联 config + app
-html = html.replace(
+# 2) 主逻辑：内联 config + app（兼容直链或 document.write 形式）
+app_replacement = f'<script>\n{config_inline}\n\n{app_inline}\n</script>'
+for pattern in [
     '<script type="module" src="app.js"></script>',
-    f'<script>\n{config_inline}\n\n{app_inline}\n</script>',
-)
+    '<script>document.write(\'<script type="module" src="app.js?t=\' + Date.now() + \'"><\\/script>\');</script>',
+]:
+    if pattern in html:
+        html = html.replace(pattern, app_replacement)
+        break
+else:
+    raise SystemExit('未找到 app.js 引入标签，无法内联')
 
-# 3) 看板：<script src="dashboard.js"> → 注入数据 + 内联 dashboard
-html = html.replace(
+# 3) 看板：注入数据 + 内联 dashboard
+dash_replacement = f'<script>\n{records_inject}\n{dashboard}\n</script>'
+for pattern in [
     '<script src="dashboard.js"></script>',
-    f'<script>\n{records_inject}\n{dashboard}\n</script>',
-)
+    '<script>document.write(\'<script src="dashboard.js?t=\' + Date.now() + \'"><\\/script>\');</script>',
+]:
+    if pattern in html:
+        html = html.replace(pattern, dash_replacement)
+        break
+else:
+    raise SystemExit('未找到 dashboard.js 引入标签，无法内联')
 
 output.write_text(html, encoding='utf-8')
 PYEOF
