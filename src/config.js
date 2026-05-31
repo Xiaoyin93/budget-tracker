@@ -39,7 +39,7 @@ export const SECTIONS = [
     subtitle: '日常生活类支出',
     items: [
       { id: 'food',   name: '餐饮', budget: 2200, cur: 'CNY' },
-      { id: 'veg',    name: '蔬菜', budget: 400,  cur: 'CNY' },
+      { id: 'veg',    name: '蔬菜', budget: 600,  cur: 'CNY' },
       { id: 'daily',  name: '日用', budget: 500,  cur: 'CNY' },
       { id: 'ent',    name: '娱乐', budget: 500,  cur: 'CNY' },
       { id: 'cloth',  name: '服饰', budget: 400,  cur: 'CNY' },
